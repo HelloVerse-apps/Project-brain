@@ -250,6 +250,28 @@ textarea:focus{border-color:var(--mute)}
 .tfoot .btn{width:auto;height:40px;padding:0 26px;font-size:14px}
 .tfoot .lnk{padding:8px 0}
 @media (prefers-reduced-motion:reduce){#brainBtn .float,.shadow,#hint,#spBrain.float,#hole,#gate .gb{animation:none}}
+/* ---- v1.2.0 daily loop ---- */
+#daily{margin-top:26px;display:flex;flex-direction:column;align-items:center;gap:16px;padding:0 30px;text-align:center;min-height:96px;transition:opacity .8s ease}
+#dailyLine{font-size:14px;line-height:1.55;color:var(--mute);max-width:300px}
+#daily .pill{height:48px;padding:0 30px;font-size:15px}
+#brainHome{transition:filter 1.2s ease,opacity 1.2s ease}
+#brainBtn.soft #brainHome{filter:saturate(.45);opacity:.7}
+#brainBtn.glow #brainHome{filter:drop-shadow(0 0 26px rgba(238,138,163,.5))}
+#brainBtn.beat #brainHome{animation:beat 1.4s ease-out}
+@keyframes beat{0%{transform:scale(1)}30%{transform:scale(1.06)}100%{transform:scale(1)}}
+.rip{fill:none;stroke:currentColor;stroke-width:1.2;transform-box:fill-box;transform-origin:center;animation:rip 1.5s ease-out forwards;pointer-events:none}
+@keyframes rip{0%{transform:scale(1);opacity:.7}100%{transform:scale(3.6);opacity:0}}
+.fr{padding:16px 0;border-bottom:1px solid var(--line)}
+.fr:last-of-type{border-bottom:0}
+.fr .ft{font-size:16px;line-height:1.4;margin-bottom:12px}
+.fr .seg{margin-bottom:8px}
+.fr .seg button{flex:1;padding:8px 6px}
+.fr .seg button[disabled]{opacity:.3;pointer-events:none}
+.fr .to{font-size:12px;color:var(--mute);min-height:16px}
+.fr .to .lnk{font-size:12px}
+.fr.rel .ft{opacity:.45;text-decoration:line-through}
+.big3{font-size:44px;font-weight:200;line-height:1;margin:2px 0 4px;letter-spacing:0}.big3 small{font-size:16px;color:var(--mute);margin-inline-start:6px}
+@media (prefers-reduced-motion:reduce){#brainBtn.beat #brainHome,.rip{animation:none}}
 </style>
 </head>
 <body data-view="home">
@@ -264,6 +286,7 @@ textarea:focus{border-color:var(--mute)}
     <button id="brainBtn" aria-label="Open your mind"><div class="float" id="brainHome"></div></button>
     <div class="shadow"></div>
     <div id="hint" data-i="hint"></div>
+    <div id="daily"><div id="dailyLine"></div><button class="pill solid" id="dailyBtn"></button></div>
   </section>
 
   <section id="map">
@@ -290,10 +313,12 @@ textarea:focus{border-color:var(--mute)}
   <div class="sheet" id="todaySheet"></div>
   <div class="sheet" id="reviewSheet"></div>
   <div class="sheet" id="msgSheet"></div>
+  <div class="sheet" id="sortSheet"></div>
   <div class="sheet" id="catchSheet">
     <div class="grab"></div>
     <div class="tag" data-i="catcherTag"></div>
     <h2 data-i="whatsOnMind"></h2>
+    <p class="note" data-i="dumpHelp" style="margin-top:-6px"></p>
     <textarea id="catchTxt" data-ph="dumpPh"></textarea>
     <div class="row"><button class="mic" id="mic" aria-label="Voice"></button><button class="btn" id="catchGo" data-i="place"></button></div>
   </div>
@@ -329,8 +354,8 @@ textarea:focus{border-color:var(--mute)}
 </div>
 
 <script>
-/* ============ Project: Brain v1.1.1 — single file, no network calls ============ */
-const VERSION='1.1.1';
+/* ============ Project: Brain v1.2.0 — single file, no network calls ============ */
+const VERSION='1.2.0';
 const KEY='projectBrain.state';
 const DEV_EMAIL='hello.verseapps@gmail.com'; // "Message the developer" opens the user's email app to this address
 
@@ -457,6 +482,26 @@ ar:{
  obFocusT:'ما الثلاثة الأهم الآن؟',obFocusS:'الباقي يُؤجَّل وليس يُحذف.',obAi:'اقتراح',obMax:'الحد ثلاثة. بدّل واحداً.',
  obBuildT:'نبني دماغك…',obResultT:c=>`يبدأ دماغك عند هدوء ${c}%.`,obResultS:'كل خطوة صغيرة تنجزها تُفكّ تشابكه.',obStart:'أرني كيف يعمل',
  tour:[{"t": "هذا عقلك.", "b": "كل نقطة هي فكرة سجّلتها وتحولت إلى هدف. الفوضى مقصودة. اسحب أي نقطة وحرّكها، وستعود إلى مكانها وحدها."}, {"t": "اضغط على نقطة.", "b": "تقترب منك. أجب عن بضعة أسئلة حول ما تريد تحقيقه، وسيبني لك مهاماً تناسبك."}, {"t": "هذا هو الهدوء.", "b": "كل مهمة تنجزها تفكّ تشابك الخريطة وترفع هذا الرقم. فاتك يوم؟ لا شيء يعود إلى الصفر."}, {"t": "اليوم، كل يوم.", "b": "افتح «اليوم» لترى مهامك: حتى 3 لكل هدف ثم ترتاح. يبدأ يوم جديد عند الثالثة فجراً."}, {"t": "سجّل كل فكرة.", "b": "اكتبها أو قلها، كل يوم، حتى الصغيرة منها. الأفكار هي المفتاح: تصبح أهدافاً ثم أولويات ثم مهام."}, {"t": "ملفك الشخصي.", "b": "«أنا» و«الإعدادات» و«حول» هنا. اختر رمزك، وراجع أسبوعك، وانسخ بياناتك احتياطياً."}, {"t": "هذا كل شيء.", "b": "فكرة، هدف، أولوية، مهام، إنجاز. ابدأ بتسجيل فكرة واحدة اليوم."}],tourNext:'التالي',tourGo:'هيا بنا'}};
+Object.assign(I.en,{
+ dumpCta:'Empty your head',dailyAsk:"What's on your mind today?",dailyProg:d=>`${d} of 3 done today`,dailyDone:"Today's 3 are done. Your brain is a little calmer.",welcomeBack:'Welcome back. Nothing was lost. One small move is enough.',dailyOpen:"Today's 3",
+ dumpHelp:"Goals, to-dos, worries. One per line, or just talk. I'll sort it.",
+ sortTag:'Sorted',sortT:'Here is where it went',sortHelp:'Tap to change anything I got wrong.',sortGo:'Confirm',fGoal:'Goal',fTask:'Task',fRelease:'Let go',toGoal:'Goes under',noGoalYet:'No goal to attach to yet',
+ sortedToast:(g,t,r)=>[g?`${g} goal${g>1?'s':''}`:'',t?`${t} task${t>1?'s':''}`:'',r?`${r} let go`:''].filter(Boolean).join(' · '),
+ whyUnlock:n=>`unlocks ${n} other goal${n>1?'s':''}`,whyStale:d=>`untouched for ${d} days`,whyClose:'almost there',whyNext:'next step',whyNew:'just added',
+ dupNote:'Already on your map',todays3:"Today's 3",todays3Done:"Today's 3 are done",capHit:t=>`Today's 3 are done. Rest. New day in ${t}.`,threeDone:"That's all 3. Look at your brain.",
+});
+Object.assign(I.ar,{
+ dumpCta:'أفرغ رأسك',dailyAsk:'ما الذي يشغل بالك اليوم؟',dailyProg:d=>`${d} من 3 أُنجزت اليوم`,dailyDone:'أنجزت ثلاثية اليوم. دماغك أهدأ قليلاً.',welcomeBack:'أهلاً بعودتك. لم يضِع شيء. خطوة صغيرة تكفي.',dailyOpen:'ثلاثية اليوم',
+ dumpHelp:'أهداف، مهام، مخاوف. فكرة في كل سطر، أو تحدّث فقط. وأنا أفرزها.',
+ sortTag:'الفرز',sortT:'هذا هو مكانها',sortHelp:'اضغط لتغيير ما أخطأت فيه.',sortGo:'تأكيد',fGoal:'هدف',fTask:'مهمة',fRelease:'اتركها',toGoal:'تحت هدف',noGoalYet:'لا يوجد هدف لإضافتها إليه بعد',
+ sortedToast:(g,t,r)=>[g?`${g} أهداف`:'',t?`${t} مهام`:'',r?`${r} تُركت`:''].filter(Boolean).join(' · '),
+ whyUnlock:n=>`يفتح ${n} أهداف أخرى`,whyStale:d=>`${d} أيام دون خطوة`,whyClose:'قريب من الاكتمال',whyNext:'الخطوة التالية',whyNew:'أُضيفت للتو',
+ dupNote:'موجود بالفعل على خريطتك',todays3:'ثلاثية اليوم',todays3Done:'أنجزت ثلاثية اليوم',capHit:t=>`أنجزت ثلاثية اليوم. ارتح. يوم جديد بعد ${t}.`,threeDone:'الثلاثة اكتملت. انظر إلى دماغك.',
+});
+I.en.tour[3]={t:"Today's 3.",b:"Three moves, picked for you, with the reason next to each. Do them and watch the brain settle. A new day starts at 3 AM."};
+I.en.tour[4]={t:'Empty your head.',b:'Type it or say it, once a day. Every thought gets sorted: a goal, a task for a goal, or let go.'};
+I.ar.tour[3]={t:'ثلاثية اليوم.',b:'ثلاث مهام اخترتها لك، مع سبب كل واحدة. أنجزها وشاهد الدماغ يهدأ. يبدأ يوم جديد عند الثالثة فجراً.'};
+I.ar.tour[4]={t:'أفرغ رأسك.',b:'اكتب أو قل، مرة كل يوم. كل فكرة تُفرز: هدف، أو مهمة تحت هدف، أو تُترك.'};
 let lang=store.get('projectBrain.lang')||((navigator.language||'').startsWith('ar')?'ar':'en');
 const T=(k,...a)=>{const v=I[lang][k]!==undefined?I[lang][k]:I.en[k];return typeof v==='function'?v(...a):v};
 const isAr=()=>lang==='ar';
@@ -681,13 +726,13 @@ const QUOTA=3;
 const condOk=(c,a)=>!c||!!(a&&c[1].includes(a[c[0]]));
 const baseSteps=pb=>PB[pb].steps.map((s,i)=>i).filter(i=>condOk(PB[pb].steps[i][5],null)).map(i=>({i,done:false}));
 function applyIntake(g,why,a){
-  const old=new Map(g.steps.map(x=>[x.i,x]));g.intake={why:why||'',a};
-  g.steps=PB[g.pb].steps.map((s,i)=>i).filter(i=>condOk(PB[g.pb].steps[i][5],a)).map(i=>old.get(i)||{i,done:false});
+  const old=new Map(g.steps.filter(x=>x.i>=0).map(x=>[x.i,x])),cust=g.steps.filter(x=>x.i<0);g.intake={why:why||'',a};
+  g.steps=PB[g.pb].steps.map((s,i)=>i).filter(i=>condOk(PB[g.pb].steps[i][5],a)).map(i=>old.get(i)||{i,done:false}).concat(cust);
 }
 function migrate(s){
   if(!s||!Array.isArray(s.goals))return s;
   if((s.v||0)<4){s.goals.forEach(g=>{if(!PB[g.pb])g.pb='gen_growth';g.intake=null;g.metric=null;g.steps=baseSteps(g.pb)});s.v=4;s.todayDone=[]}
-  s.profile=s.profile||{};if(!s.avatar||s.avatar==='brain'||!AV[s.avatar])s.avatar='spark';
+  s.profile=s.profile||{};s.plan=s.plan||null;s.dumps=s.dumps||[];s.released=s.released||0;s.log=s.log||[];if(!s.avatar||s.avatar==='brain'||!AV[s.avatar])s.avatar='spark';
   return s;
 }
 
@@ -709,20 +754,20 @@ function linkDeps(){
 }
 
 /* ---------- state ---------- */
-const fresh=()=>({v:4,app:VERSION,name:'',avatar:'spark',profile:{},onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[]});
+const fresh=()=>({v:4,app:VERSION,name:'',avatar:'spark',profile:{},onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[],plan:null,dumps:[],released:0,log:[]});
 let S=store.get(KEY);if(!S||!Array.isArray(S.goals))S=fresh();
 const save=()=>store.set(KEY,S);
 const G=id=>S.goals.find(g=>g.id===id);
 const L=()=>isAr()?2:1;
 const gt=g=>g.title;
 const fillT=(g,t)=>t.replace(/\{(\w+)\}/g,(m,k)=>{const p=PB[g.pb],v=g.intake&&g.intake.a&&g.intake.a[k],q=(p.q||[]).find(x=>x.id===k),o=q&&q.o.find(x=>x[0]===v);return o?o[L()]:((p.fb&&p.fb[k])||{})[lang]||''});
-const gs=(g,i)=>fillT(g,PB[g.pb].steps[g.steps[i].i][L()]);
-const gmini=(g,i)=>{const t=PB[g.pb].steps[g.steps[i].i][L()+2];return t?fillT(g,t):T('shrinkGeneric',gs(g,i))};
-const gph=(g,i)=>{const p=PB[g.pb];return p.ph?p.ph[p.steps[g.steps[i].i][0]][lang]:''};
+const gs=(g,i)=>{const x=g.steps[i];return x.t?x.t:fillT(g,PB[g.pb].steps[x.i][L()])};
+const gmini=(g,i)=>{const t=g.steps[i].t?null:PB[g.pb].steps[g.steps[i].i][L()+2];return t?fillT(g,t):T('shrinkGeneric',gs(g,i))};
+const gph=(g,i)=>{const p=PB[g.pb];if(g.steps[i].t)return '';return p.ph?p.ph[p.steps[g.steps[i].i][0]][lang]:''};
 const gn=g=>(PB[g.pb].note||{})[lang]||'';
 const stepsDone=g=>g.steps.filter(x=>x.done).length;
-const fin=g=>!!g.intake&&g.steps.every(x=>x.done);
-const prog=g=>stepsDone(g)/g.steps.length;
+const fin=g=>!!g.intake&&g.steps.length>0&&g.steps.every(x=>x.done);
+const prog=g=>g.steps.length?stepsDone(g)/g.steps.length:0;
 const nextStep=g=>g.intake?g.steps.findIndex(x=>!x.done):-1;
 const doneN=()=>S.goals.reduce((a,g)=>a+stepsDone(g),0);
 const meanProg=()=>S.goals.length?S.goals.reduce((a,g)=>a+prog(g),0)/S.goals.length:0;
@@ -852,7 +897,7 @@ function paint(){
   });
   if(!RPL.on){const c=calm();$('#calmN').textContent=c+'%';$('#calmBar').style.width=c+'%'}
   const t=todayMoves().filter(m=>!m.done).length;$('#todayN').textContent=t?('· '+t):'';
-  $('#insight').textContent=insight();
+  $('#insight').textContent=insight();renderDaily();
 }
 function frame(ts){
   tick3d(ts);
@@ -942,27 +987,68 @@ const leftToday=g=>Math.max(0,QUOTA-doneToday(g));
 const todayTasks=g=>{const out=[],n=leftToday(g);for(let k=0;k<g.steps.length&&out.length<n;k++)if(!g.steps[k].done)out.push(k);return out};
 const untilReset=()=>{const n=new Date(),t=new Date(n);t.setHours(3,0,0,0);if(t<=n)t.setDate(t.getDate()+1);const m=Math.max(1,Math.round((t-n)/6e4));return Math.floor(m/60)+(isAr()?' س ':'h ')+(m%60)+(isAr()?' د':'m')};
 const CHK='<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
-function todayMoves(){
-  const m=[];activeList().forEach(g=>{
-    if(!g.intake){m.push({g,i:-1,done:false});return}
-    doneTodayIdx(g).forEach(i=>m.push({g,i,done:true}));
-    todayTasks(g).forEach(i=>m.push({g,i,done:false}));
-  });return m;
+/* ---------- v1.2.0: Today's 3 (total cap across all goals, with the reason shown) ---------- */
+const TOTAL=3;
+const doneTodayAll=()=>S.goals.reduce((a,g)=>a+doneToday(g),0);
+const sIdx=(g,r)=>g.steps.findIndex(x=>r.u?x.u===r.u:(!x.u&&x.i===r.i));
+const stepRef=(g,k)=>{const x=g.steps[k];return x.u?{g:g.id,u:x.u}:{g:g.id,i:x.i}};
+const planSig=()=>activeList().map(g=>g.id+(g.intake?1:0)+g.steps.length).join('|');
+function rankGoals(){
+  const now=Date.now();
+  return activeList().filter(g=>g.intake).map(g=>{
+    const unl=S.goals.filter(o=>o.deps.includes(g.id)&&!fin(o)).length,stale=Math.floor((now-lastTouch(g))/D);
+    return {g,s:unl*3+Math.min(stale,6)*.5+(prog(g)>=.5?1:0)}}).sort((a,b)=>b.s-a.s).map(x=>x.g);
+}
+function buildPlan(){
+  const items=[];S.goals.forEach(g=>doneTodayIdx(g).forEach(k=>items.push(stepRef(g,k))));
+  const gl=rankGoals(),qs=gl.map(g=>g.steps.map((x,k)=>k).filter(k=>!g.steps[k].done).slice(0,leftToday(g)));
+  let more=true;
+  while(items.length<TOTAL&&more){more=false;qs.forEach((q,gi)=>{if(items.length<TOTAL&&q.length){items.push(stepRef(gl[gi],q.shift()));more=true}})}
+  S.plan={d:dayKey(),sig:planSig(),items};save();
+}
+function ensurePlan(){if(!S.plan||S.plan.d!==dayKey()||S.plan.sig!==planSig())buildPlan()}
+function planItems(){ensurePlan();return S.plan.items.map(r=>{const g=G(r.g);if(!g)return null;const k=sIdx(g,r);if(k<0)return null;return {g,i:k,done:!!g.steps[k].done}}).filter(Boolean)}
+function whyOf(g,k){
+  const x=g.steps[k];if(x&&x.c&&dayKey(x.c)===dayKey())return T('whyNew');
+  const u=S.goals.filter(o=>o.deps.includes(g.id)&&!fin(o)).length;if(u)return T('whyUnlock',u);
+  const d=Math.floor((Date.now()-lastTouch(g))/D);if(d>=2)return T('whyStale',d);
+  if(prog(g)>=.5)return T('whyClose');return T('whyNext');
+}
+function todayMoves(){const m=[];activeList().forEach(g=>{if(!g.intake)m.push({g,i:-1,done:false})});planItems().forEach(x=>m.push(x));return m}
+function reactBrain(gid){
+  const b=$('#brainBtn');b.classList.remove('beat');void b.offsetWidth;b.classList.add('beat');
+  const n=typeof nodes!=='undefined'&&nodes.find(m=>m.g.id===gid);if(n&&n.el){const r=el('circle',{class:'rip',r:9},n.el);setTimeout(()=>r.remove(),1600)}
+  renderDaily();
+}
+function celebrate(){setTimeout(()=>{closeSheets();view('map');setTimeout(()=>{pulse();reactBrain(null)},1000)},1100)}
+function dayGap(){if(!S.days.length)return 0;const last=S.days.reduce((a,b)=>a>b?a:b);return Math.round((new Date(dayKey()+'T00:00')-new Date(last+'T00:00'))/D)}
+function renderDaily(){
+  const d=$('#daily');if(!d)return;
+  if(!S.onboarded){d.style.display='none';return}
+  d.style.display='';
+  const gap=dayGap(),nd=doneTodayAll(),dumped=(S.dumps||[]).includes(dayKey()),full=nd>=TOTAL,b=$('#brainBtn');
+  b.classList.toggle('soft',gap>=2&&!full);b.classList.toggle('glow',full);
+  let line,cta,fn;
+  if(!dumped&&!full){line=gap>=2?T('welcomeBack'):T('dailyAsk');cta=T('dumpCta');fn=openCatcher}
+  else{line=full?T('dailyDone'):T('dailyProg',nd);cta=T('dailyOpen');fn=()=>openToday()}
+  $('#dailyLine').textContent=line;$('#dailyBtn').textContent=cta;$('#dailyBtn').onclick=fn;
 }
 function completeStep(gid,i){
   const g=G(gid);if(!g||!g.intake||g.steps[i].done)return;
+  if(doneTodayAll()>=TOTAL){toast(T('capHit',untilReset()));return}
   if(leftToday(g)<=0){toast(T('quotaFull',untilReset()));return}
   const before=calm();g.steps[i].done=true;g.steps[i].at=Date.now();markDay();
   if(fin(g))g.active=false;
-  save();paint();pulse();
-  const d=calm()-before;
-  toast(fin(g)?T('goalSettled',gt(g)):leftToday(g)===0?T('dayDone',untilReset()):T('settled')+(d>0?' +'+d+'%':''));checkBadges();
+  save();paint();pulse();reactBrain(g.id);
+  const d=calm()-before,all=doneTodayAll();
+  toast(fin(g)?T('goalSettled',gt(g)):all>=TOTAL?T('threeDone'):T('settled')+(d>0?' +'+d+'%':''));checkBadges();
+  if(all>=TOTAL)celebrate();
 }
 function touchGoal(gid){const g=G(gid);g.touches=g.touches||[];g.touches.push(Date.now());markDay();save();paint();pulse();toast(T('touchToast'));checkBadges()}
 function parkGoal(g){g.active=false;S.flags.parked=1;save();paint();toast(T('parkedToast'));checkBadges()}
-const taskBtn=(g,k,done)=>{
-  const sm=!done&&k===nextStep(g)&&isShrunk(g,k);
-  return `<button class="tl ${done?'done':''}" data-g="${g.id}" data-k="${k}" data-sm="${sm?1:0}">${CHK}<span><div class="s">${esc(sm?gmini(g,k):gs(g,k))}</div>${sm?`<div class="g" style="margin:4px 0 0">${T('madeSmaller')}</div>`:''}</span></button>`;
+const taskBtn=(g,k,done,lab)=>{
+  const sm=!done&&k===nextStep(g)&&isShrunk(g,k)&&!(g.steps[k].c&&dayKey(g.steps[k].c)===dayKey());
+  return `<button class="tl ${done?'done':''}" data-g="${g.id}" data-k="${k}" data-sm="${sm?1:0}">${CHK}<span>${lab?`<div class="g">${esc(lab)}</div>`:''}<div class="s">${esc(sm?gmini(g,k):gs(g,k))}</div>${sm?`<div class="g" style="margin:4px 0 0">${T('madeSmaller')}</div>`:''}</span></button>`;
 };
 function wireTasks(root,after){
   root.querySelectorAll('.tl[data-k]').forEach(b=>b.onclick=()=>{
@@ -990,14 +1076,12 @@ function openPicker(){
 }
 function openToday(){
   if(!activeList().length)return openPicker();
-  const m=todayMoves(),left=m.filter(x=>!x.done).length;
+  const pl=planItems(),nd=pl.filter(x=>x.done).length,left=pl.length-nd;
   const dt=new Date().toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'});
-  const groups=activeList().map(g=>{
-    const head=`<div class="tag" style="margin:20px 0 0">${esc(gt(g))}${g.intake?' · '+doneToday(g)+' / '+QUOTA:''}</div>`;
-    if(!g.intake)return head+`<button class="opt" data-intake="${g.id}" style="margin-top:10px">${T('answerFirst')}</button>`;
-    return head+doneTodayIdx(g).map(k=>taskBtn(g,k,true)).join('')+todayTasks(g).map(k=>taskBtn(g,k,false)).join('')+(leftToday(g)===0?`<p class="note" style="margin:10px 0 0">${T('lockedS',untilReset())}</p>`:'');
-  }).join('');
-  $('#todaySheet').innerHTML=`<div class="grab"></div><div class="tag">${dt}</div><h2>${left?T('yourMoves'):T('nothingLeft')}</h2>${groups}
+  const rows=pl.map(x=>taskBtn(x.g,x.i,x.done,gt(x.g)+(x.done?'':' · '+whyOf(x.g,x.i)))).join('');
+  const pend=activeList().filter(g=>!g.intake).map(g=>`<button class="opt" data-intake="${g.id}" style="margin-top:10px">${esc(gt(g))} · ${T('answerFirst')}</button>`).join('');
+  $('#todaySheet').innerHTML=`<div class="grab"></div><div class="tag">${dt}</div><h2>${!pl.length?T('nothingLeft'):left?T('todays3'):T('todays3Done')}</h2>
+   ${pl.length?`<div class="big3">${nd}<small>/ ${TOTAL}</small></div>`:''}${rows}${pend}
    <p class="note" style="margin-top:22px">${left?T('todayHelp'):T('calmAt',calm())}</p>
    <div style="text-align:center"><button class="lnk" id="tPick">${T('pickChange')}</button></div>`;
   wireTasks($('#todaySheet'),openToday);
@@ -1025,8 +1109,8 @@ function intakeForm(g){
 }
 function roadmap(g,cur){
   const p=PB[g.pb];let out='',last=-1;
-  g.steps.forEach((x,k)=>{const ph=p.steps[x.i][0];
-    if(p.ph&&ph!==last){out+=`<div class="phh">${p.ph[ph][lang]}</div>`;last=ph}
+  g.steps.forEach((x,k)=>{const ph=x.i<0?last:p.steps[x.i][0];
+    if(p.ph&&x.i>=0&&ph!==last){out+=`<div class="phh">${p.ph[ph][lang]}</div>`;last=ph}
     out+=`<div class="s ${x.done?'d':cur.includes(k)?'cur':''}">${esc(gs(g,k))}</div>`});
   return out;
 }
@@ -1071,14 +1155,70 @@ function voice(ta,mic){
   const end=()=>{listening=false;mic.classList.remove('on')};rec.onend=end;rec.onerror=end;
   try{rec.start();listening=true;mic.classList.add('on');toast(T('listening'))}catch(e){end()}
 }
-$('#addBtn').onclick=()=>{$('#catchTxt').value='';openSheet('#catchSheet');setTimeout(()=>$('#catchTxt').focus(),500)};
+const openCatcher=()=>{$('#catchTxt').value='';openSheet('#catchSheet');setTimeout(()=>$('#catchTxt').focus(),500)};
+$('#addBtn').onclick=openCatcher;
 $('#mic').onclick=()=>voice($('#catchTxt'),$('#mic'));
+
+/* ---------- v1.2.0: every thought gets one of three fates: goal, task for a goal, or let go ---------- */
+const WORRY=/worr|anxious|anxiety|stress|scared|afraid|overthink|what if|annoy|angry|upset|sick of|can'?t stop thinking|why (?:am|do|did) i|قلق|خايف|خائف|خوف|متوتر|توتر|زعلان|مضايق|مزعج/i;
+const TASKV=/^(?:(?:call|email|text|message|book|pay|send|order|renew|ask|check|find|schedule|cancel|fix|clean|print|sign|submit|reply|remind|pick up|follow up|look up|google)\b|(?:اتصل|كلم|ارسل|أرسل|احجز|ادفع|اطلب|جدد|اسأل|تحقق|ابحث|نظف|ذكر)(?=\s|$))/i;
+const GOALV=/^(?:(?:i\s+)?(?:want|wanna|need|have)\s+to\b|(?:become|start|get|lose|buy|learn|build|launch|save|grow|publish)\b|(?:أريد|أبغى|ابغى|أرغب|اشتري|تعلم|ابدأ|انقص|ابني|اكسب)(?=\s|$))/i;
+const STOPW=new Set(['want','wanna','need','with','have','that','this','from','about','your','more','some','make','take','into','what','your']);
+const wordsOf=t=>noDia(String(t).toLowerCase()).split(/[^a-z0-9؀-ۿ]+/).filter(w=>w.length>3&&!STOPW.has(w));
+const taskText=t=>{t=t.trim().replace(/[.,،]+$/,'');return t.charAt(0).toUpperCase()+t.slice(1,90)};
+function bestGoal(t){
+  const open=S.goals.filter(g=>!fin(g));if(!open.length)return null;
+  const k=pbKey(t),w=wordsOf(t);let best=null,bs=0;
+  open.forEach(g=>{let sc=0;if(!k.startsWith('gen_')&&g.pb===k)sc+=3;const gw=wordsOf(g.title);
+    sc+=w.filter(x=>gw.some(y=>y===x||(x.length>4&&y.length>4&&(y.startsWith(x.slice(0,5))||x.startsWith(y.slice(0,5)))))).length*2;
+    if(sc>bs){bs=sc;best={g,sc}}});
+  return bs>=2?best:null;
+}
+function fateOf(raw){
+  if(WORRY.test(raw))return {fate:'release'};
+  const m=bestGoal(raw);
+  if(m&&GOALV.test(raw)&&m.sc>=3)return {fate:'release',dup:true,gid:m.g.id};
+  if(m&&(TASKV.test(raw)||!GOALV.test(raw)))return {fate:'task',gid:m.g.id};
+  return {fate:'goal'};
+}
+let SORT=[];
+function openSort(items){SORT=items.map(raw=>Object.assign({raw},fateOf(raw)));renderSort();openSheet('#sortSheet')}
+function renderSort(){
+  const open=S.goals.filter(g=>!fin(g)),sh=$('#sortSheet');
+  sh.querySelectorAll(':scope>:not(.xbtn)').forEach(x=>x.remove());
+  sh.insertAdjacentHTML('beforeend',`<div class="grab"></div><div class="tag">${T('sortTag')}</div><h2>${T('sortT')}</h2><p class="note">${T('sortHelp')}</p>`+
+   SORT.map((x,k)=>{
+     const g=x.gid&&G(x.gid);
+     const to=x.fate==='task'?(g?`${T('toGoal')} <button class="lnk" data-cyc="${k}">${esc(gt(g))}</button>`:T('noGoalYet')):(x.fate==='release'&&x.dup?T('dupNote'):'');
+     return `<div class="fr ${x.fate==='release'?'rel':''}"><div class="ft">${esc(taskText(x.raw))}</div>
+      <div class="seg">${['goal','task','release'].map(f=>`<button data-k="${k}" data-f="${f}" class="${x.fate===f?'on':''}" ${f==='task'&&!open.length?'disabled':''}>${T('f'+f[0].toUpperCase()+f.slice(1))}</button>`).join('')}</div>
+      <div class="to">${to}</div></div>`}).join('')+
+   `<button class="btn" id="sortGo" style="margin-top:14px">${T('sortGo')}</button>`);
+  sh.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{const x=SORT[+b.dataset.k],f=b.dataset.f;x.fate=f;
+    if(f==='task'&&!(x.gid&&G(x.gid))){const m=bestGoal(x.raw);x.gid=(m?m.g:open[0]).id}renderSort()});
+  sh.querySelectorAll('[data-cyc]').forEach(b=>b.onclick=()=>{const x=SORT[+b.dataset.cyc],at=open.findIndex(g=>g.id===x.gid);x.gid=open[(at+1)%open.length].id;renderSort()});
+  $('#sortGo').onclick=applySort;
+}
+function applySort(){
+  let ng=0,nt=0,nr=0;const now=Date.now();
+  SORT.forEach((x,k)=>{
+    if(x.fate==='task'&&G(x.gid)){const g=G(x.gid),at=g.steps.findIndex(y=>!y.done);
+      g.steps.splice(at<0?g.steps.length:at,0,{i:-1,t:taskText(x.raw),done:false,u:'u'+now.toString(36)+k,c:now});nt++}
+    else if(x.fate==='release')nr++;
+    else{S.goals.push(makeGoal(x.raw,k));ng++}
+    S.log.push({at:now,t:x.raw.slice(0,140),f:x.fate});
+  });
+  if(S.log.length>300)S.log=S.log.slice(-300);
+  S.released+=nr;linkDeps();
+  const dk=dayKey();if(!S.dumps.includes(dk))S.dumps.push(dk);markDay();
+  S.flags.dumped=1;save();closeSheets();build();checkBadges();
+  toast(T('sortedToast',ng,nt,nr));
+  if(S.onboarded&&(ng||nt))setTimeout(()=>openToday(),900);
+}
 $('#catchGo').onclick=()=>{
   if(listening&&rec)rec.stop();
   const items=splitThoughts($('#catchTxt').value);if(!items.length)return;
-  items.forEach((raw,k)=>S.goals.push(makeGoal(raw,k)));linkDeps();
-  S.flags.dumped=1;save();closeSheets();build();checkBadges();
-  toast(T('placedToast',items.length,activeList().length));
+  openSort(items);
 };
 
 /* ---------- weekly review + replay ---------- */
@@ -1338,7 +1478,7 @@ function createFromOb(){
   S.name=OB.name;S.profile={birth:OB.birth,gender:OB.gender};S.answers={feel:OB.feel,pat:OB.pat};
   S.goals=OB.list.map((t,i)=>makeGoal(t,i));OB.picks.forEach(i=>{if(S.goals[i])S.goals[i].active=true});linkDeps();
   const FB={5:.40,4:.28,3:.16,2:.08,1:.02},pen=clamp((OB.list.length-3)*.012,0,.1);
-  S.base=Math.max(0,(FB[OB.feel]||.16)-pen);S.onboarded=true;S.flags.dumped=1;S.calm0=calm();S.created=Date.now();save();checkBadges(true);
+  S.base=Math.max(0,(FB[OB.feel]||.16)-pen);S.onboarded=true;S.flags.dumped=1;S.dumps=[dayKey()];S.plan=null;S.calm0=calm();S.created=Date.now();save();checkBadges(true);
   obGo(5);setTimeout(showResult,2600);
 }
 function showResult(){
