@@ -69,7 +69,8 @@ body[data-view=map] #map{opacity:1;pointer-events:auto;transform:scale(1)}
 .node.held{cursor:grabbing}
 .node .dot{transition:r .6s,fill .6s,opacity .6s,stroke .6s}
 .node text{font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;transition:opacity .8s;pointer-events:none}
-.node.sel .dot,.node.sel text,.node.held text,.node.held .dot{opacity:1!important}
+.node.sel .dot,.node.held text,.node.held .dot{opacity:1!important}
+.node.sel text,#map.foc .node text{opacity:0!important;transition:opacity .25s}
 .edge{fill:none;stroke:var(--ink);stroke-linecap:round}
 #veil{position:absolute;inset:0;z-index:15;pointer-events:none;opacity:0;transition:opacity .7s ease;
   -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);background:rgba(255,255,255,.2);
@@ -167,6 +168,10 @@ textarea:focus{border-color:var(--mute)}
 .avb.on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:22px;text-align:center}
 .stats b{display:block;font-weight:300;font-size:18px}.stats span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.flowrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:14px 0 4px;font-size:12px}
+.flowrow span{border:1px solid var(--line);border-radius:999px;padding:6px 11px}
+.flowrow i{color:var(--mute);font-style:normal}
+[dir=rtl] .flowrow i{display:inline-block;transform:scaleX(-1)}
 .sec{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 14px}
 .sec h3{margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);font-weight:400}.sec span{font-size:12px;color:var(--mute)}
 .badges{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;margin-bottom:26px}
@@ -324,8 +329,8 @@ textarea:focus{border-color:var(--mute)}
 </div>
 
 <script>
-/* ============ Project: Brain v1.1.0 — single file, no network calls ============ */
-const VERSION='1.1.0';
+/* ============ Project: Brain v1.1.1 — single file, no network calls ============ */
+const VERSION='1.1.1';
 const KEY='projectBrain.state';
 const DEV_EMAIL='hello.verseapps@gmail.com'; // "Message the developer" opens the user's email app to this address
 
@@ -339,7 +344,8 @@ const mem={};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
 /* open the app with ?reset to start as a brand-new user */
 if(/[?&]reset(?:[=&]|$)/.test(location.search)){['projectBrain.state','projectBrain.lang','projectBrain.langSet'].forEach(k=>store.del(k));try{history.replaceState(null,'',location.pathname)}catch(e){}}
-const dayKey=()=>new Date().toLocaleDateString('en-CA');
+/* a "day" starts at 3 AM, so late-night work still counts for the day before */
+const dayKey=(t=Date.now())=>new Date(t-3*36e5).toLocaleDateString('en-CA');
 const fmt=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:1});
 const D=864e5;
 const f1=n=>n.toFixed(1);
@@ -386,15 +392,16 @@ function brainSVG(ghost,shine){
 
 /* ---------- language ---------- */
 const I={en:{
+ intakeTag:"Plan this goal",intakeSub:"Answer a few questions so your tasks fit you, not a template.",intakeWhy:"What are you trying to achieve?",intakeGo:"Build my tasks",intakeEdit:"Change my answers",planReady:"Your plan is ready",yourAim:"Your aim",todayTasks:"Today's tasks",firstTasks:"Tasks for when you focus",quotaNote:"Up to 3 tasks a day for each goal. A new day unlocks at 3 AM.",lockedT:"That's enough for today.",lockedS:t=>`New tasks unlock at 3 AM, in ${t}.`,quotaFull:t=>`3 tasks done for this goal today. Unlocks in ${t}.`,dayDone:t=>`3 of 3 done for this goal. See you at 3 AM (in ${t}).`,focusFirst:"Bring this goal into focus to start its tasks.",answerFirst:"Answer a few questions to get your tasks",aboutYou:"About you",birth:"Birth date",gender:"Gender",male:"Male",female:"Female",ageYears:n=>`${n} years old`,obAboutHint:"Optional. Stays on this device.",flow:["Thought", "Goal", "Priority", "Tasks", "Done"],aboutPrivT:"Your data",aboutS:[{"t": "Why it exists", "b": ["Project: Brain was built for people whose heads are full: many ideas, many worries, and a hard time turning them into action.", "Most planners assume you can already organise your thoughts. This one starts one step earlier, with the thoughts themselves."]}, {"t": "How it works", "b": ["1. Log every thought, every day. Thoughts are the key.", "2. Each thought becomes a goal or project on your map.", "3. You choose up to 3 priorities.", "4. It asks what you are trying to achieve, then builds specific tasks for you.", "5. You do up to 3 tasks per goal per day, then rest. A new day unlocks at 3 AM."]}, {"t": "How it can help with ADHD", "b": ["Many people with ADHD, and plenty without it, find the same things hard: holding thoughts in mind, deciding what comes first, starting, and not doing everything at once or nothing at all. The app is designed around those.", "Getting thoughts out of your head onto the map frees up mental space.", "Only 3 priorities and 3 tasks per goal a day keeps the list short enough to start.", "Every task has a tiny version, and after a few quiet days it shrinks for you.", "The daily limit stops the all-in-one-day burnout, so you come back tomorrow.", "No streaks and no guilt. Miss a day and nothing resets. Parking a goal is not deleting it."]}, {"t": "How it helps you manage your brain", "b": ["Calm shows your progress as a picture, not a to-do count.", "The weekly review and patterns show when you actually get things done.", "Mind replay lets you watch your head settle over time."]}],
  brand:'Project: Brain',tagline:'Untangle your mind, one small move at a time.',begin:'Begin',next:'Continue',skip:'Skip',hint:'Tap your brain',back:'Brain',calm:'Calm',addThought:'+ Thought',today:'Today',
- introL:['You are your brain.','And you deserve to know how to work with it.','Project: Brain walks you through it, one small move at a time.'],
+ introL:['You are your brain.','Thoughts are the key. Log every one, every day, even the small and messy ones.','Project: Brain turns them into goals, ranks what matters, and gives you tasks to achieve them.'],
  inFocus:'In focus',parkedTag:'Parked',settledTag:'Settled',todayMove:"Today's move",firstMove:"First move when you're ready",twoMin:'Takes about 2 minutes',
  done:'Done, I did it',park:'Park',focus:'Bring into focus',leansOn:'Leans on',unlocks:'Unlocks',
- allSet:'All moves done',allSetSub:'Keep logging your number. That is what finishes this one.',
+ allSet:'All moves done',allSetSub:'Every task is done. Well done.',
  logToday:'Log today',save:'Save',cancel:'Cancel',target:'Target',now:'Number now',trackNumber:'Track a number',edit:'Edit',unit:'Unit',label:'What are you measuring?',start:'Starting number',
  madeSmaller:'Made smaller',shrinkNote:"A few days passed. Here's the tiny version.",fullDone:'I did the full step',touchToast:'Good. That counts.',shrinkGeneric:x=>`Just 2 minutes on: ${x}`,
  del:'Delete goal',delConfirm:'Tap again to delete',closeLbl:'Close',
- yourMoves:'Your moves today',nothingLeft:'Nothing left. Rest.',todayHelp:'Tap each one as you do it. 30 seconds tonight is the whole habit.',calmAt:c=>`Calm is at ${c}%. Come back tomorrow, the map will be here.`,
+ yourMoves:'Your moves today',nothingLeft:'Nothing left. Rest.',todayHelp:'Tap each task as you do it. Up to 3 per goal, then rest. New tasks unlock at 3 AM.',calmAt:c=>`Calm is at ${c}%. New tasks unlock at 3 AM. The map will be here.`,
  pickTitle:'What matters most right now?',pickSub:"Pick up to 3. Today's moves come from these. The rest wait, nothing is lost.",pickSet:'Set my focus',pickChange:'Change my priorities',pickEmptyT:'Your brain is empty so far',pickEmptyS:"Add a thought first, then pick what matters and today's moves will show up here.",
  catcherTag:'Thought catcher',whatsOnMind:"What's on your mind?",dumpPh:'Dump everything. One per line, or just talk.',place:'Place it',listening:'Listening…',noVoice:"Voice isn't available in this browser",
  placedToast:(n,c)=>`${n} thought${n>1?'s':''} placed · parked (${c}/3 in focus)`,
@@ -412,21 +419,22 @@ const I={en:{
  obWelcomeT:"Let's build your brain.",obWelcomeS:'A few quick questions, so it starts out the way your head actually feels.',obPrivacy:'Everything stays on this device. No account, no tracking.',obName:'What should I call you?',obNamePh:'Your name (optional)',
  obFeelT:'How does your head feel right now?',feel5:"Calm. I mostly know what's next.",feel4:'Busy, but manageable.',feel3:'A lot going on.',feel2:'Chaotic. Hard to start anything.',feel1:"Total noise. I can't even pick.",
  obPatT:'What usually happens when you plan?',pat1:'I start many things and finish few.',pat2:'I forget what I decided.',pat3:"I know what to do but can't start.",pat4:"I'm fine. I just want a system.",
- obDumpT:'Now, empty your head.',obDumpS:'Everything you want, worry about, or keep meaning to do. Messy is perfect.',obCaught:n=>`${n} thought${n===1?'':'s'} caught`,
+ obDumpT:'Now, empty your head.',obDumpS:'Everything you want, worry about, or keep meaning to do. Logging every thought, every day, is what makes this work. Messy is perfect.',obCaught:n=>`${n} thought${n===1?'':'s'} caught`,
  obChips:['Buy a car','Lose weight','Start creating content','Make more money','Learn something new','Get married','Buy a laptop','Travel somewhere'],
  obFocusT:'Which 3 matter most right now?',obFocusS:'The rest get parked, not deleted.',obAi:'AI pick',obMax:'Three is the limit. Swap one out.',
  obBuildT:'Building your brain…',obResultT:c=>`Your brain starts at ${c}% calm.`,obResultS:'Every small move you finish untangles it.',obStart:'Show me around',
- tour:[{t:'This is your mind.',b:"Every dot is something you want. It's messy on purpose. Drag any dot around, it floats back by itself."},{t:'Tap a dot.',b:'It zooms in and shows one tiny move for today, plus a way to track the goal.'},{t:'This is Calm.',b:'Every move you finish untangles the map and raises it. Miss a day? It never resets.'},{t:'Today, every day.',b:'Open Today to see what to do. It follows the goals you picked as priorities. Thirty seconds is the whole habit.'},{t:'Catch random thoughts.',b:'Type it or say it. It gets placed for you and parked until you choose it.'},{t:'Your profile.',b:'Me, Settings and About live here. Pick your symbol, review your week, back up your data.'},{t:"That's it.",b:'Start with one move today. Small is the point.'}],tourNext:'Next',tourGo:"Let's go"},
+ tour:[{"t": "This is your mind.", "b": "Every dot is a thought you logged, turned into a goal. It's messy on purpose. Drag any dot around, it floats back by itself."}, {"t": "Tap a dot.", "b": "It zooms in. Answer a few questions about what you're trying to achieve, and it builds tasks that fit you."}, {"t": "This is Calm.", "b": "Every task you finish untangles the map and raises it. Miss a day? It never resets."}, {"t": "Today, every day.", "b": "Open Today for your tasks: up to 3 per goal, then you rest. A new day unlocks at 3 AM."}, {"t": "Log every thought.", "b": "Type it or say it, every day, even the small ones. Thoughts are the key: they become goals, then priorities, then tasks."}, {"t": "Your profile.", "b": "Me, Settings and About live here. Pick your symbol, review your week, back up your data."}, {"t": "That's it.", "b": "Thought, goal, priority, tasks, done. Start by logging one thought today."}],tourNext:'Next',tourGo:"Let's go"},
 ar:{
+ intakeTag:"خطّط لهذا الهدف",intakeSub:"أجب عن بضعة أسئلة لتناسبك المهام، وليس قالباً جاهزاً.",intakeWhy:"ماذا تحاول أن تحقق؟",intakeGo:"ابنِ مهامي",intakeEdit:"غيّر إجاباتي",planReady:"خطتك جاهزة",yourAim:"هدفك",todayTasks:"مهام اليوم",firstTasks:"مهام تبدأ عندما تركّز عليه",quotaNote:"حتى 3 مهام يومياً لكل هدف. يبدأ يوم جديد عند الثالثة فجراً.",lockedT:"يكفي لهذا اليوم.",lockedS:t=>`تُفتح مهام جديدة عند الثالثة فجراً، بعد ${t}.`,quotaFull:t=>`أنجزت 3 مهام لهذا الهدف اليوم. تُفتح مهام جديدة بعد ${t}.`,dayDone:t=>`أنجزت 3 من 3 لهذا الهدف. نلتقي عند الثالثة فجراً (بعد ${t}).`,focusFirst:"ركّز على هذا الهدف لتبدأ مهامه.",answerFirst:"أجب عن بضعة أسئلة لتحصل على مهامك",aboutYou:"عنك",birth:"تاريخ الميلاد",gender:"الجنس",male:"ذكر",female:"أنثى",ageYears:n=>`${n} سنة`,obAboutHint:"اختياري. يبقى على هذا الجهاز.",flow:["فكرة", "هدف", "أولوية", "مهام", "إنجاز"],aboutPrivT:"بياناتك",aboutS:[{"t": "لماذا بُني", "b": ["بُني «مشروع: الدماغ» لأصحاب الرؤوس المزدحمة: أفكار كثيرة وهموم كثيرة، وصعوبة في تحويلها إلى فعل.", "معظم المخططات تفترض أنك قادر أصلاً على ترتيب أفكارك. هذا التطبيق يبدأ قبل ذلك بخطوة، من الأفكار نفسها."]}, {"t": "كيف يعمل", "b": ["1. سجّل كل فكرة، كل يوم. الأفكار هي المفتاح.", "2. كل فكرة تصبح هدفاً أو مشروعاً على خريطتك.", "3. تختار حتى 3 أولويات.", "4. يسألك عمّا تريد تحقيقه، ثم يبني لك مهاماً محددة.", "5. تنجز حتى 3 مهام لكل هدف في اليوم ثم ترتاح. يبدأ يوم جديد عند الثالثة فجراً."]}, {"t": "كيف قد يساعد مع فرط الحركة وتشتت الانتباه", "b": ["كثيرون ممن لديهم اضطراب فرط الحركة وتشتت الانتباه، وكثيرون غيرهم، يجدون الأشياء نفسها صعبة: إبقاء الأفكار في الذهن، وتحديد ما يأتي أولاً، والبدء، وتجنب فعل كل شيء دفعة واحدة أو لا شيء. صُمم التطبيق حول هذه الصعوبات.", "إخراج الأفكار من رأسك إلى الخريطة يفسح لك مساحة ذهنية.", "3 أولويات فقط و3 مهام لكل هدف يومياً تُبقي القائمة قصيرة بما يكفي لتبدأ.", "لكل مهمة نسخة صغيرة، وبعد بضعة أيام هادئة تصغر المهمة تلقائياً.", "الحد اليومي يمنع الإنهاك من فعل كل شيء في يوم واحد، فتعود غداً.", "لا سلاسل متواصلة ولا شعور بالذنب. إن فاتك يوم لا شيء يعود إلى الصفر. وتأجيل الهدف لا يعني حذفه."]}, {"t": "كيف يساعدك على إدارة دماغك", "b": ["الهدوء يعرض تقدمك كصورة وليس مجرد عدد مهام.", "المراجعة الأسبوعية والأنماط تُظهر متى تنجز فعلاً.", "إعادة عرض العقل تتيح لك مشاهدة رأسك وهو يستقر مع الوقت."]}],
  brand:'مشروع: الدماغ',tagline:'رتّب ذهنك، بخطوة صغيرة كل مرة.',begin:'ابدأ',next:'متابعة',skip:'تخطَّ',hint:'اضغط على دماغك',back:'الدماغ',calm:'الهدوء',addThought:'+ فكرة',today:'اليوم',
- introL:['أنت دماغك.','ومن حقك أن تعرف كيف تتعامل معه.','«مشروع: الدماغ» يرافقك في ذلك، خطوة صغيرة كل مرة.'],
+ introL:['أنت دماغك.','الأفكار هي المفتاح. سجّل كل فكرة، كل يوم، حتى الصغيرة والمبعثرة.','«مشروع: الدماغ» يحوّلها إلى أهداف، ويرتّب ما يهم، ويعطيك مهام لتحقيقها.'],
  inFocus:'قيد التركيز',parkedTag:'مؤجّل',settledTag:'مكتمل',todayMove:'خطوة اليوم',firstMove:'أول خطوة عندما تكون جاهزاً',twoMin:'تستغرق دقيقتين تقريباً',
  done:'تم، أنجزتها',park:'أجّل',focus:'ركّز عليه',leansOn:'يعتمد على',unlocks:'يفتح',
- allSet:'أنجزت كل الخطوات',allSetSub:'واصل تسجيل رقمك. هذا ما يُنهي هذا الهدف.',
+ allSet:'أنجزت كل الخطوات',allSetSub:'أنجزت كل المهام. أحسنت.',
  logToday:'سجّل اليوم',save:'حفظ',cancel:'إلغاء',target:'الهدف',now:'الرقم الآن',trackNumber:'تتبّع رقماً',edit:'تعديل',unit:'الوحدة',label:'ماذا تقيس؟',start:'رقم البداية',
  madeSmaller:'تم تصغيرها',shrinkNote:'مرّت بضعة أيام. هذه النسخة الصغيرة.',fullDone:'أنجزت الخطوة كاملة',touchToast:'أحسنت. هذا يُحسب.',shrinkGeneric:x=>`دقيقتان فقط على: ${x}`,
  del:'احذف الهدف',delConfirm:'اضغط مرة أخرى للحذف',closeLbl:'إغلاق',
- yourMoves:'خطواتك اليوم',nothingLeft:'لا شيء متبقٍ. ارتح.',todayHelp:'اضغط على كل خطوة عند إنجازها. 30 ثانية الليلة هي العادة كلها.',calmAt:c=>`الهدوء عند ${c}%. عُد غداً، الخريطة بانتظارك.`,
+ yourMoves:'خطواتك اليوم',nothingLeft:'لا شيء متبقٍ. ارتح.',todayHelp:'اضغط على كل مهمة عند إنجازها. حتى 3 مهام لكل هدف ثم ارتح. تُفتح مهام جديدة عند الثالثة فجراً.',calmAt:c=>`الهدوء عند ${c}%. تُفتح مهام جديدة عند الثالثة فجراً. الخريطة بانتظارك.`,
  pickTitle:'ما الأهم الآن؟',pickSub:'اختر حتى 3 أهداف. خطوات اليوم تأتي منها. والباقي ينتظر، ولا شيء يضيع.',pickSet:'ثبّت تركيزي',pickChange:'غيّر أولوياتي',pickEmptyT:'دماغك فارغ حتى الآن',pickEmptyS:'أضف فكرة أولاً، ثم اختر ما يهمك لتظهر خطوات اليوم هنا.',
  catcherTag:'صائد الأفكار',whatsOnMind:'ما الذي يشغل بالك؟',dumpPh:'أفرغ كل شيء. فكرة في كل سطر، أو تحدّث فقط.',place:'ضعها في مكانها',listening:'أستمع…',noVoice:'الصوت غير متاح في هذا المتصفح',
  placedToast:(n,c)=>`تم وضع ${n} ${n>2&&n<11?'أفكار':'فكرة'} · مؤجّلة (${c}/3 قيد التركيز)`,
@@ -444,68 +452,245 @@ ar:{
  obWelcomeT:'لنبنِ دماغك.',obWelcomeS:'بضعة أسئلة سريعة، لتبدأ الخريطة كما يشعر رأسك فعلاً.',obPrivacy:'كل شيء يبقى على جهازك. بلا حساب وبلا تتبّع.',obName:'بماذا أناديك؟',obNamePh:'اسمك (اختياري)',
  obFeelT:'كيف يبدو رأسك الآن؟',feel5:'هادئ. أعرف غالباً ما الخطوة التالية.',feel4:'مزدحم لكن يمكن التعامل معه.',feel3:'الكثير يدور في رأسي.',feel2:'فوضوي. من الصعب أن أبدأ أي شيء.',feel1:'ضجيج تام. لا أستطيع حتى الاختيار.',
  obPatT:'ماذا يحدث عادةً عندما تخطّط؟',pat1:'أبدأ أشياء كثيرة وأنهي القليل.',pat2:'أنسى ما قررته.',pat3:'أعرف ما عليّ فعله لكني لا أستطيع البدء.',pat4:'أنا بخير. أريد فقط نظاماً.',
- obDumpT:'الآن، أفرغ رأسك.',obDumpS:'كل ما تريده أو يقلقك أو تؤجله دائماً. الفوضى مثالية.',obCaught:n=>`تم التقاط ${n} ${n>2&&n<11?'أفكار':'فكرة'}`,
+ obDumpT:'الآن، أفرغ رأسك.',obDumpS:'كل ما تريده أو يقلقك أو تؤجله دائماً. تسجيل كل فكرة، كل يوم، هو ما يجعل هذا ينجح. الفوضى مثالية.',obCaught:n=>`تم التقاط ${n} ${n>2&&n<11?'أفكار':'فكرة'}`,
  obChips:['اشترِ سيارة','انقص وزنك','ابدأ بصناعة المحتوى','اكسب مالاً أكثر','تعلّم شيئاً جديداً','تزوّج','اشترِ لابتوب','سافر إلى مكان ما'],
  obFocusT:'ما الثلاثة الأهم الآن؟',obFocusS:'الباقي يُؤجَّل وليس يُحذف.',obAi:'اقتراح',obMax:'الحد ثلاثة. بدّل واحداً.',
  obBuildT:'نبني دماغك…',obResultT:c=>`يبدأ دماغك عند هدوء ${c}%.`,obResultS:'كل خطوة صغيرة تنجزها تُفكّ تشابكه.',obStart:'أرني كيف يعمل',
- tour:[{t:'هذا عقلك.',b:'كل نقطة هي شيء تريده. الفوضى مقصودة. اسحب أي نقطة وحرّكها، وستعود إلى مكانها وحدها.'},{t:'اضغط على نقطة.',b:'تقترب منك وتُظهر خطوة صغيرة لليوم، وطريقة لتتبّع الهدف.'},{t:'هذا هو الهدوء.',b:'كل خطوة تنجزها تفكّ تشابك الخريطة وترفع هذا الرقم. فاتك يوم؟ لا شيء يعود إلى الصفر.'},{t:'اليوم، كل يوم.',b:'افتح «اليوم» لترى ما عليك فعله. يتبع الأهداف التي اخترتها كأولويات. ثلاثون ثانية هي العادة كلها.'},{t:'التقط الأفكار العشوائية.',b:'اكتبها أو قلها. تُوضع في مكانها وتُؤجَّل حتى تختارها.'},{t:'ملفك الشخصي.',b:'«أنا» و«الإعدادات» و«حول» هنا. اختر رمزك، وراجع أسبوعك، وانسخ بياناتك احتياطياً.'},{t:'هذا كل شيء.',b:'ابدأ بخطوة واحدة اليوم. الصغير هو المقصود.'}],tourNext:'التالي',tourGo:'هيا بنا'}};
+ tour:[{"t": "هذا عقلك.", "b": "كل نقطة هي فكرة سجّلتها وتحولت إلى هدف. الفوضى مقصودة. اسحب أي نقطة وحرّكها، وستعود إلى مكانها وحدها."}, {"t": "اضغط على نقطة.", "b": "تقترب منك. أجب عن بضعة أسئلة حول ما تريد تحقيقه، وسيبني لك مهاماً تناسبك."}, {"t": "هذا هو الهدوء.", "b": "كل مهمة تنجزها تفكّ تشابك الخريطة وترفع هذا الرقم. فاتك يوم؟ لا شيء يعود إلى الصفر."}, {"t": "اليوم، كل يوم.", "b": "افتح «اليوم» لترى مهامك: حتى 3 لكل هدف ثم ترتاح. يبدأ يوم جديد عند الثالثة فجراً."}, {"t": "سجّل كل فكرة.", "b": "اكتبها أو قلها، كل يوم، حتى الصغيرة منها. الأفكار هي المفتاح: تصبح أهدافاً ثم أولويات ثم مهام."}, {"t": "ملفك الشخصي.", "b": "«أنا» و«الإعدادات» و«حول» هنا. اختر رمزك، وراجع أسبوعك، وانسخ بياناتك احتياطياً."}, {"t": "هذا كل شيء.", "b": "فكرة، هدف، أولوية، مهام، إنجاز. ابدأ بتسجيل فكرة واحدة اليوم."}],tourNext:'التالي',tourGo:'هيا بنا'}};
 let lang=store.get('projectBrain.lang')||((navigator.language||'').startsWith('ar')?'ar':'en');
 const T=(k,...a)=>{const v=I[lang][k]!==undefined?I[lang][k]:I.en[k];return typeof v==='function'?v(...a):v};
 const isAr=()=>lang==='ar';
 const loc=()=>isAr()?'ar-AE-u-nu-latn':'en-GB';
 const dayName=i=>new Date(2024,0,7+i).toLocaleDateString(loc(),{weekday:'long'});
 
-/* ---------- playbooks: [phase, en, ar, tiny-en, tiny-ar] ---------- */
-const st=(p,en,arb,me,ma)=>[p,en,arb,me,ma];
+/* ---------- playbooks: [phase, en, ar, tiny-en, tiny-ar, condition] ----------
+   {key} in a step is replaced by the label of the answer the person gave to question "key".
+   condition = [questionId,[answers]]: the step only appears for those answers. */
+const st=(p,en,ar,te,ta,c)=>[p,en,ar,te,ta,c];
+const op=(v,en,ar,ce,ca)=>ce?[v,en,ar,ce,ca]:[v,en,ar];
+const Q=(id,en,ar,opts)=>({id,en,ar,o:opts});
+const PH=(en,ar)=>({en,ar});
+const GENQ=[
+ Q('when',`When do you want this done?`,`متى تريد إنجاز هذا؟`,[op('month',`Within a month`,`خلال شهر`),op('q',`In 3 months`,`خلال 3 أشهر`),op('year',`This year`,`خلال هذه السنة`),op('none',`No deadline`,`بلا موعد محدد`)]),
+ Q('start',`Where are you right now?`,`أين أنت الآن؟`,[op('know',`I know the first step`,`أعرف الخطوة الأولى`),op('stuck',`I can't get started`,`لا أستطيع البدء`),op('money',`I need money for it first`,`أحتاج مالاً لها أولاً`),op('learn',`I need to learn how first`,`أحتاج أن أتعلّم كيف أولاً`)]),
+ Q('who',`Who is involved?`,`من يشارك في هذا؟`,[op('me',`Just me`,`أنا فقط`),op('people',`Someone close to me`,`شخص مقرّب مني`),op('expert',`I need an expert or advice`,`أحتاج خبيراً أو نصيحة`)])];
+const GEN=(cl,f1e,f1a,tiny,exe,exa)=>({cl,ph:[PH(`Define`,`حدّد`),PH(`Plan`,`خطّط`),PH(`Do`,`نفّذ`)],ex:{en:exe,ar:exa},q:GENQ,fb:{when:{en:`your target date`,ar:`موعدك المستهدف`}},steps:[
+ st(0,f1e,f1a,tiny[0],tiny[1]),
+ st(0,`Write why this matters to you in one sentence, and what will be different in your life once it is done.`,`اكتب لماذا يهمك هذا في جملة واحدة، وماذا سيتغيّر في حياتك عندما يتحقق.`,`Write just the "why" in 5 words`,`اكتب «لماذا» في 5 كلمات فقط`),
+ st(0,`You want this within a month, so set 3 checkpoints: what will be done by day 7, by day 14 and by day 30.`,`تريد هذا خلال شهر، فضع 3 محطات: ماذا سيكون منجزاً في اليوم 7 وفي اليوم 14 وفي اليوم 30.`,`Write only the day 7 checkpoint`,`اكتب محطة اليوم 7 فقط`,['when',['month']]),
+ st(0,`Break this into 3 milestones and give each a rough date. Your target: {when}.`,`قسّم هذا إلى 3 مراحل وضع لكل مرحلة تاريخاً تقريبياً. موعدك: {when}.`,`Write just milestone 1`,`اكتب المرحلة الأولى فقط`,['when',['q','year','none']]),
+ st(1,`Getting started is the hard part, so shrink it: write one action that takes under 5 minutes and attach it to something you already do ("After my morning coffee I will ___").`,`البدء هو الجزء الصعب، لذلك صغّره: اكتب خطوة تستغرق أقل من 5 دقائق واربطها بشيء تفعله أصلاً («بعد قهوة الصباح سأقوم بـ ___»).`,`Write the 5-minute action only`,`اكتب خطوة الـ 5 دقائق فقط`,['start',['stuck']]),
+ st(1,`Write what this will cost in AED, one-off and monthly. Decide where the money comes from and what you can pause to fund it.`,`اكتب كم سيكلّف هذا بالدرهم، دفعة واحدة وشهرياً. قرّر من أين سيأتي المال وما الذي يمكنك إيقافه لتمويله.`,`Write only the total cost`,`اكتب التكلفة الإجمالية فقط`,['start',['money']]),
+ st(1,`Find ONE beginner resource (a course, a book or a person who has done it) and spend the first 10 minutes with it.`,`ابحث عن مصدر واحد للمبتدئين (دورة أو كتاب أو شخص سبق أن فعلها) واقضِ أول 10 دقائق معه.`,`Just find the resource`,`اعثر على المصدر فقط`,['start',['learn']]),
+ st(1,`Write the next 3 actions in order. The first one must take under 15 minutes.`,`اكتب الخطوات الثلاث التالية بالترتيب. الأولى يجب ألا تستغرق أكثر من 15 دقيقة.`,`Write just the first action`,`اكتب الخطوة الأولى فقط`,['start',['know']]),
+ st(1,`Decide who to involve and write their name, plus the one question or request you will bring to them. Message them today.`,`قرّر من تُشركه واكتب اسمه، مع السؤال أو الطلب الواحد الذي ستحمله إليه. راسله اليوم.`,`Write the name only`,`اكتب الاسم فقط`,['who',['people','expert']]),
+ st(2,`Do the first action now. Set a 15-minute timer and stop when it rings, even if you want to keep going.`,`نفّذ الخطوة الأولى الآن. اضبط مؤقتاً لـ 15 دقيقة وتوقف عند انتهائه حتى لو أردت المتابعة.`,`Work for just 5 minutes`,`اعمل 5 دقائق فقط`),
+ st(2,`Put the next 3 actions in your calendar with exact times this week.`,`ضع الخطوات الثلاث التالية في تقويمك بمواعيد محددة هذا الأسبوع.`,`Schedule just one`,`جدول واحدة فقط`),
+ st(2,`Review: what worked, what blocked you, and what is the next checkpoint? Adjust the plan.`,`راجع: ما الذي نجح، وما الذي أعاقك، وما المحطة التالية؟ عدّل الخطة.`,`Write one thing that worked`,`اكتب شيئاً واحداً نجح`)]});
+
 const PB={
- creator:{cl:'create',ph:[{en:'Clarity',ar:'الوضوح'},{en:'First content',ar:'أول محتوى'},{en:'Rhythm',ar:'الإيقاع'},{en:'Grow',ar:'النمو'}],
-  metric:{label:{en:'Videos posted',ar:'فيديوهات منشورة'},unit:{en:'',ar:''},start:0,target:12},note:{en:'Pick one platform. Two is how this one dies.',ar:'اختر منصة واحدة. اثنتان هما سبب موت هذا الهدف.'},
-  steps:[st(0,'Write down 3 topics you could talk about for hours (e.g. cars, music, fitness)','اكتب 3 مواضيع تستطيع الحديث عنها لساعات (مثل السيارات أو الموسيقى أو اللياقة)','Write just one topic','اكتب موضوعاً واحداً فقط'),
-   st(0,'Finish this sentence: "My content helps ___ to ___"','أكمل الجملة: «محتواي يساعد ___ على ___»','Write who it helps, in 3 words','اكتب من تساعده في 3 كلمات'),
-   st(0,'Choose ONE platform to start on (Instagram, TikTok or YouTube)','اختر منصة واحدة فقط للبداية (إنستغرام أو تيك توك أو يوتيوب)','Pick the app you open most','اختر التطبيق الذي تفتحه أكثر'),
-   st(0,'Follow 3 creators in your topic. Write one thing you would do differently from each','تابع 3 صنّاع محتوى في مجالك. اكتب شيئاً واحداً ستفعله بشكل مختلف عن كل منهم','Follow just one creator','تابع صانع محتوى واحداً فقط'),
-   st(1,"Film a 30-second test video. Don't post it",'صوّر فيديو تجريبياً مدته 30 ثانية. لا تنشره','Film 5 seconds of anything','صوّر 5 ثوانٍ من أي شيء'),
-   st(1,'Watch it back and write down one thing to improve (sound, light or length)','شاهده ودوّن شيئاً واحداً لتحسينه (الصوت أو الإضاءة أو المدة)','Watch the first 5 seconds','شاهد أول 5 ثوانٍ فقط'),
-   st(1,'Set up your profile: name, a short bio and a profile photo','جهّز حسابك: الاسم ونبذة قصيرة وصورة شخصية','Choose the profile photo','اختر الصورة الشخصية فقط'),
-   st(1,'Post your first video. It does not need to be perfect','انشر أول فيديو. لا يجب أن يكون مثالياً','Write a caption for your best clip','اكتب وصفاً لأفضل مقطع لديك'),
-   st(2,'Choose 2 days a week for posting and add them to your calendar','اختر يومين في الأسبوع للنشر وأضفهما إلى تقويمك','Pick just one posting day','اختر يوم نشر واحداً فقط'),
-   st(2,'Write scripts for 3 videos in one sitting (a hook, the point, an ending)','اكتب سيناريو 3 فيديوهات في جلسة واحدة (افتتاحية، الفكرة، خاتمة)','Write only the first line of video 1','اكتب أول جملة في الفيديو الأول فقط'),
-   st(2,'Film all 3 videos in one session, then post one each day','صوّر الفيديوهات الثلاثة في جلسة واحدة، ثم انشر واحداً كل يوم','Film just video 1','صوّر الفيديو الأول فقط'),
-   st(3,'Open your stats, find your best post and make 2 more like it','افتح الإحصائيات، واعرف أفضل منشور لك، وأنتج اثنين مثله','Just find your best post','اعرف أفضل منشور لك فقط'),
-   st(3,'After 4 weeks, decide: keep this platform, change your style, or switch','بعد 4 أسابيع قرّر: تبقى على المنصة أم تغيّر أسلوبك أم تنتقل لمنصة أخرى','Write one thing you like about it','اكتب شيئاً واحداً يعجبك فيها')]},
- weight:{cl:'body',ph:[{en:'Baseline',ar:'نقطة البداية'},{en:'Habits',ar:'العادات'},{en:'Momentum',ar:'الزخم'}],
-  sug:{label:{en:'Weight',ar:'الوزن'},unit:{en:'kg',ar:'كغ'}},note:{en:'Small and daily beats big and Monday.',ar:'الصغير اليومي أفضل من الكبير الذي يبدأ يوم الاثنين.'},
-  steps:[st(0,'Step on the scale and write down your weight today','قِس وزنك اليوم ودوّن الرقم','Just step on the scale','قف على الميزان فقط'),
-   st(0,'Write your target weight and the date you want to reach it','اكتب وزنك المستهدف والتاريخ الذي تريد الوصول فيه إليه','Write only the target number','اكتب رقم الهدف فقط'),
-   st(0,'Take a photo of everything you eat for 2 days (change nothing yet)','صوّر كل ما تأكله ليومين (دون تغيير أي شيء الآن)','Photograph one meal','صوّر وجبة واحدة'),
-   st(1,'Set a daily steps goal (start with what you walk now + 1,000)','حدّد هدفاً يومياً للخطوات (ابدأ بما تمشيه الآن + 1000)','Check how many steps you walked today','اطّلع على خطواتك اليوم'),
-   st(1,'Decide tonight what you will eat for lunch tomorrow','قرّر الليلة ماذا ستأكل غداً في الغداء','Just choose the protein','اختر مصدر البروتين فقط'),
-   st(1,'Pick 3 times this week for a workout and add them to your calendar','اختر 3 مواعيد هذا الأسبوع للتمرين وأضفها إلى تقويمك','Pick one time','اختر موعداً واحداً'),
-   st(2,'Do 15 minutes of walking or a workout today','امشِ أو تمرّن لمدة 15 دقيقة اليوم','Walk for 5 minutes','امشِ 5 دقائق'),
-   st(2,'Weigh yourself again and compare with day one','قِس وزنك مجدداً وقارنه بالبداية','Just weigh yourself','قِس وزنك فقط'),
-   st(2,'Write what worked and what did not. Keep the first, drop the second','اكتب ما نجح وما لم ينجح. أبقِ الأول واترك الثاني','Write one thing that worked','اكتب شيئاً واحداً نجح')]},
- money:{cl:'money',ph:[{en:'Map it',ar:'ارسم الصورة'},{en:'Test it',ar:'جرّب'},{en:'Scale it',ar:'وسّع'}],
-  sug:{label:{en:'Monthly side income',ar:'دخل إضافي شهري'},unit:{en:'AED',ar:'د.إ'}},
-  steps:[st(0,'Write down every income source you have today and how much each gives','اكتب كل مصادر دخلك الحالية وكم يعطيك كل مصدر','Write your main income only','اكتب دخلك الأساسي فقط'),
-   st(0,'Write the monthly income you want to reach, in AED','اكتب الدخل الشهري الذي تريد الوصول إليه بالدرهم','Write just one number','اكتب رقماً واحداً'),
-   st(0,'List 3 skills that people would pay you for','اكتب 3 مهارات يدفع الناس مقابلها','List one skill','اكتب مهارة واحدة'),
-   st(1,'Choose one idea to earn extra money and test it first','اختر فكرة واحدة لكسب دخل إضافي وجرّبها أولاً','Circle your favorite idea','ضع دائرة حول فكرتك المفضلة'),
-   st(1,'Message 3 people who might pay for it and ask if they are interested','راسل 3 أشخاص قد يدفعون مقابلها واسألهم إن كانوا مهتمين','Message one person','راسل شخصاً واحداً'),
-   st(1,'Get your first paying customer or make your first sale','احصل على أول عميل يدفع لك أو نفّذ أول عملية بيع','Decide the price you will ask','قرّر السعر الذي ستطلبه'),
-   st(2,'Look back: write what worked and what did not','انظر للخلف: اكتب ما نجح وما لم ينجح','Write one lesson','اكتب درساً واحداً'),
-   st(2,'Do the thing that worked again, twice','كرّر ما نجح مرتين','Plan the repeat only','خطّط للتكرار فقط'),
-   st(2,'Pick a weekly day to check your money for 10 minutes','اختر يوماً أسبوعياً لمراجعة أموالك لمدة 10 دقائق','Choose the day','اختر اليوم فقط')]},
- car:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write your real monthly budget for a car (payment, fuel, insurance)','اكتب ميزانيتك الشهرية الحقيقية للسيارة (القسط والوقود والتأمين)'),st(0,'Pick 3 car models you could actually afford','اختر 3 موديلات تستطيع تحمّل تكلفتها فعلاً'),st(0,'For each model, check the insurance and yearly running cost','لكل موديل، اطّلع على التأمين وتكلفة التشغيل السنوية'),st(0,'Book a test drive for your top choice','احجز تجربة قيادة لخيارك الأول'),st(0,'Set your maximum price and the date you want to buy by','حدّد أعلى سعر ستدفعه وتاريخ الشراء المطلوب')]},
- laptop:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write down what you need the laptop for (work, editing, gaming...)','اكتب ما تحتاج اللابتوب من أجله (عمل، مونتاج، ألعاب...)'),st(0,'Compare 2 laptops on price and specs','قارن بين لابتوبين من حيث السعر والمواصفات'),st(0,'Set the maximum price you will pay','حدّد أعلى سعر ستدفعه'),st(0,'Look for sales, offers or trade-in options','ابحث عن تخفيضات أو عروض أو خيارات استبدال'),st(0,'Buy it','اشترِه')]},
- marry:{cl:'life',note:{en:'A theme with milestones, not a checklist.',ar:'محور بمراحل، وليس قائمة مهام.'},steps:[st(0,'Write the 3 values that matter most to you in a marriage','اكتب القيم الثلاث الأهم بالنسبة لك في الزواج'),st(0,'Have a relaxed talk with your partner about the future, no agenda','تحدّث مع شريكة حياتك بهدوء عن المستقبل دون أجندة مسبقة'),st(0,'Write what "ready" means to you (money, home, timing)','اكتب ما معنى أن تكون «جاهزاً» (المال، البيت، التوقيت)'),st(0,'List the big milestones (family, venue, paperwork) and who is involved','اكتب المحطات الكبرى (العائلة، المكان، الأوراق) ومن يشارك فيها'),st(0,'Set a rough budget and a target date','ضع ميزانية تقريبية وتاريخاً مستهدفاً')]},
- learn:{cl:'growth',steps:[st(0,'Choose the ONE thing you want to learn (a language, guitar, a skill)','اختر الشيء الواحد الذي تريد تعلّمه (لغة، جيتار، مهارة)'),st(0,'Find one beginner course or video series for it','ابحث عن دورة أو سلسلة فيديو واحدة للمبتدئين فيه'),st(0,'Spend 10 minutes on it today','اقضِ 10 دقائق فيه اليوم'),st(0,'Pick a fixed time each week to practice and add it to your calendar','اختر وقتاً ثابتاً كل أسبوع للتدرب وأضفه إلى تقويمك'),st(0,'Show or teach someone one thing you learned','اشرح لشخص ما شيئاً واحداً تعلمته')]},
- house:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write what your ideal home needs: area, size and budget','اكتب ما يحتاجه بيتك المثالي: المنطقة والمساحة والميزانية'),st(0,'Check what mortgage or rent you can afford each month','اعرف قيمة القسط أو الإيجار الشهري الذي تستطيع تحمّله'),st(0,'Choose 3 areas you would like to live in','اختر 3 مناطق تودّ السكن فيها'),st(0,'Visit 2 places in person or online','زر مكانين، حضورياً أو عبر الإنترنت'),st(0,'Decide on one and set the date for the next step','قرّر مكاناً واحداً وحدّد موعد الخطوة التالية')]},
- travel:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Choose where you want to go and roughly when','اختر وجهتك والوقت التقريبي للسفر'),st(0,'Set a total budget for the trip','حدّد ميزانية إجمالية للرحلة'),st(0,'Check visa rules and flight prices','اطّلع على شروط التأشيرة وأسعار الرحلات'),st(0,'Book the first thing (flight or hotel)','احجز أول شيء (الرحلة أو الفندق)')]},
- gen_money:{cl:'money',steps:[st(0,'Write the exact amount of money you want, in AED','اكتب المبلغ الذي تريده بالضبط بالدرهم'),st(0,'Write 3 different ways you could get there','اكتب 3 طرق مختلفة قد توصلك إليه'),st(0,'Do the smallest first action today (a message, a search, a call)','نفّذ أصغر خطوة أولى اليوم (رسالة أو بحث أو اتصال)')]},
- gen_body:{cl:'body',steps:[st(0,'Write down where you are today (weight, fitness or habit)','دوّن أين أنت اليوم (الوزن أو اللياقة أو العادة)'),st(0,'Choose one small daily habit that will move you forward','اختر عادة يومية صغيرة تدفعك للأمام'),st(0,'Do that habit once today','نفّذ هذه العادة مرة واحدة اليوم')]},
- gen_life:{cl:'life',steps:[st(0,'Write why this matters to you in one sentence','اكتب لماذا يهمك هذا في جملة واحدة'),st(0,'Decide who you need to talk to first, and about what','حدّد مع من يجب أن تتحدث أولاً وعن ماذا'),st(0,'Set a rough time frame: when do you want this done?','ضع إطاراً زمنياً تقريبياً: متى تريد إنجاز هذا؟')]},
- gen_growth:{cl:'growth',steps:[st(0,'Decide the first small thing to learn or do for this goal','قرّر أول شيء صغير تتعلمه أو تفعله لهذا الهدف'),st(0,'Spend 10 minutes on it today','اقضِ 10 دقائق فيه اليوم'),st(0,'Pick a fixed time each week to work on it','اختر وقتاً ثابتاً كل أسبوع للعمل عليه')]},
- gen_create:{cl:'create',steps:[st(0,'Write your idea in one sentence','اكتب فكرتك في جملة واحدة'),st(0,'Make the quickest, roughest first version (ugly is fine)','اصنع أسرع نسخة أولى وأبسطها (لا بأس أن تكون قبيحة)'),st(0,'Show it to one person and ask what they think','أرِها لشخص واحد واسأله عن رأيه')]}};
+ creator:{cl:'create',ph:[PH(`Clarity`,`الوضوح`),PH(`Set up`,`التجهيز`),PH(`First video`,`أول فيديو`),PH(`Rhythm`,`الإيقاع`),PH(`Grow`,`النمو`)],
+  ex:{en:`Example: Cars content on Instagram to get brand partnerships`,ar:`مثال: محتوى عن السيارات على إنستغرام للحصول على شراكات مع العلامات`},
+  note:{en:`Pick one platform. Two is how this one dies. Rules change, so check the permit details yourself.`,ar:`اختر منصة واحدة. اثنتان هما سبب موت هذا الهدف. القوانين تتغيّر، فتحقق من تفاصيل التصريح بنفسك.`},
+  fb:{topic:{en:`your topic`,ar:`موضوعك`},plat:{en:`your platform`,ar:`منصتك`}},
+  q:[Q('topic',`What will you make content about?`,`عمّ ستصنع المحتوى؟`,[op('cars',`cars`,`السيارات`),op('music',`music`,`الموسيقى`),op('fitness',`fitness and food`,`اللياقة والطعام`),op('biz',`business and money`,`الأعمال والمال`),op('life',`lifestyle and travel`,`نمط الحياة والسفر`),op('other',`your topic`,`موضوعك`,`Something else`,`شيء آخر`)]),
+   Q('plat',`Which platform first?`,`أي منصة أولاً؟`,[op('Instagram',`Instagram`,`إنستغرام`),op('TikTok',`TikTok`,`تيك توك`),op('YouTube',`YouTube`,`يوتيوب`),op('unsure',`your platform`,`منصتك`,`Not sure yet`,`لست متأكداً بعد`)]),
+   Q('goal',`What do you want from it?`,`ماذا تريد منه؟`,[op('money',`Income and brand deals`,`دخل وشراكات`),op('brand',`A personal brand for my career`,`علامة شخصية لمسيرتي`),op('fun',`Share what I love`,`مشاركة ما أحب`),op('biz',`Grow a business`,`تنمية عمل`)])],
+  steps:[
+   st(0,`Write 3 angles on {topic} you could talk about for hours, and one thing most videos about it get wrong.`,`اكتب 3 زوايا في موضوع {topic} تستطيع الحديث عنها لساعات، وشيئاً واحداً يخطئ فيه معظم من يتحدث عنه.`,`Write just one angle`,`اكتب زاوية واحدة فقط`),
+   st(0,`Finish this sentence: "My content helps ___ do ___". Then name one real person you picture watching (a friend, a colleague).`,`أكمل الجملة: «محتواي يساعد ___ على ___». ثم سمِّ شخصاً حقيقياً واحداً تتخيله يشاهدك (صديق أو زميل).`,`Write who it helps, in 3 words`,`اكتب من تساعده في 3 كلمات`),
+   st(0,`Pick your platform. Reels for quick reach, TikTok for discovery, YouTube for long-term searchable content. Choose the one you already open most.`,`اختر منصتك. ريلز للانتشار السريع، تيك توك للاكتشاف، يوتيوب للمحتوى الدائم الذي يظهر في البحث. اختر ما تفتحه أكثر.`,`Pick the app you open most`,`اختر التطبيق الذي تفتحه أكثر`,['plat',['unsure']]),
+   st(0,`Watch 5 posts from 3 creators in {topic}. Write what they all do the same (hook, length, captions) and one gap you could fill.`,`شاهد 5 منشورات لـ 3 صنّاع محتوى في موضوع {topic}. اكتب ما يتشابهون فيه (الافتتاحية، المدة، الوصف) وثغرة واحدة يمكنك سدّها.`,`Watch just one post`,`شاهد منشوراً واحداً فقط`),
+   st(1,`Set up your {plat} account: a clear name, a one-line bio that says who it helps, and a profile photo where your face is visible.`,`جهّز حسابك على {plat}: اسم واضح، ونبذة من سطر واحد تقول من تساعد، وصورة شخصية يظهر فيها وجهك.`,`Choose the profile photo`,`اختر الصورة الشخصية فقط`),
+   st(1,`UAE check: posting ads or sponsored content, paid or not, needs a UAE Media Council Advertiser Permit (uaemc.gov.ae), and residents also need an e-media trade licence. Check the current rules before your first sponsored post.`,`تحقق من الإمارات: نشر الإعلانات أو المحتوى المدفوع، سواء بمقابل أو دونه، يتطلب «تصريح معلن» من المجلس الإماراتي للإعلام (uaemc.gov.ae)، والمقيمون يحتاجون أيضاً رخصة تجارية للإعلام الإلكتروني. راجع الشروط الحالية قبل أول منشور إعلاني.`,`Just open uaemc.gov.ae`,`افتح uaemc.gov.ae فقط`,['goal',['money','biz']]),
+   st(1,`Film a 30-second test video on your phone: face a window for light, hold the phone at eye level, and start talking within 2 seconds. Do not post it.`,`صوّر فيديو تجريبياً مدته 30 ثانية بهاتفك: واجه نافذة للإضاءة، وضع الهاتف بمستوى العينين، وابدأ الكلام خلال ثانيتين. لا تنشره.`,`Film 5 seconds of anything`,`صوّر 5 ثوانٍ من أي شيء`),
+   st(1,`Watch it muted, then with sound. Write one fix for light, one for sound and one for length.`,`شاهده بدون صوت ثم بالصوت. اكتب تحسيناً للإضاءة وآخر للصوت وآخر للمدة.`,`Watch the first 5 seconds`,`شاهد أول 5 ثوانٍ فقط`),
+   st(2,`Write the hook for video 1: one sentence that makes a stranger stay 3 more seconds (a question, a surprising number or a bold claim).`,`اكتب افتتاحية الفيديو الأول: جملة واحدة تجعل الغريب يبقى 3 ثوانٍ إضافية (سؤال أو رقم مفاجئ أو ادعاء جريء).`,`Write 3 hook options, pick later`,`اكتب 3 افتتاحيات واختر لاحقاً`),
+   st(2,`Film video 1 (30 to 60 seconds): hook, one point, one call to action (follow, comment or save). Maximum 3 takes.`,`صوّر الفيديو الأول (30 إلى 60 ثانية): افتتاحية، فكرة واحدة، ودعوة لإجراء (تابع أو علّق أو احفظ). 3 محاولات كحد أقصى.`,`Film just the hook`,`صوّر الافتتاحية فقط`),
+   st(2,`Edit and post video 1 with a caption and 3 to 5 relevant hashtags. Done beats perfect.`,`مَنتِج الفيديو الأول وانشره مع وصف و3 إلى 5 وسوم مناسبة. الإنجاز أفضل من الكمال.`,`Write the caption only`,`اكتب الوصف فقط`),
+   st(2,`24 hours later, write down views, watch time and comments for video 1. Just the numbers, no judgement.`,`بعد 24 ساعة دوّن المشاهدات ومدة المشاهدة والتعليقات للفيديو الأول. الأرقام فقط دون حكم.`,`Write the view count only`,`دوّن عدد المشاهدات فقط`),
+   st(3,`Choose 2 posting days a week and a 60-minute filming block. Put both in your calendar.`,`اختر يومين للنشر في الأسبوع وساعة للتصوير. ضعهما في تقويمك.`,`Pick just one posting day`,`اختر يوم نشر واحداً فقط`),
+   st(3,`Batch it: write 3 scripts in one sitting (hook, point, ending), then film all 3 in one session.`,`اعمل بالدفعات: اكتب 3 سيناريوهات في جلسة واحدة (افتتاحية، فكرة، خاتمة)، ثم صوّرها كلها في جلسة واحدة.`,`Write only the first line of script 1`,`اكتب أول سطر من السيناريو الأول فقط`),
+   st(3,`Post 8 videos over 4 weeks (2 a week). After each one, log the views and one lesson in your notes.`,`انشر 8 فيديوهات خلال 4 أسابيع (فيديوهان أسبوعياً). بعد كل واحد دوّن المشاهدات ودرساً واحداً في ملاحظاتك.`,`Post one`,`انشر واحداً فقط`),
+   st(4,`Open your stats, find your 2 best posts and make 3 more in the same style.`,`افتح الإحصائيات، وابحث عن أفضل منشورين، وأنتج 3 منشورات أخرى بالأسلوب نفسه.`,`Just find your best post`,`اعرف أفضل منشور فقط`),
+   st(4,`After 8 videos, decide: keep this platform, change your style, or add a second platform. Write the decision and the date you will review it.`,`بعد 8 فيديوهات قرّر: تبقى على المنصة أم تغيّر أسلوبك أم تضيف منصة ثانية. اكتب القرار وتاريخ مراجعته.`,`Write one thing you like about it`,`اكتب شيئاً واحداً يعجبك فيها`)]},
+
+ weight:{cl:'body',ph:[PH(`Baseline`,`نقطة البداية`),PH(`Habits`,`العادات`),PH(`Movement`,`الحركة`),PH(`Momentum`,`الزخم`)],
+  ex:{en:`Example: Lose 8 kg by March and feel lighter`,ar:`مثال: إنقاص 8 كغ بحلول مارس والشعور بخفة أكبر`},
+  note:{en:`Small and daily beats big and Monday. This is not medical advice: check with a doctor before big changes to your diet or exercise.`,ar:`الصغير اليومي أفضل من الكبير الذي يبدأ يوم الاثنين. هذا ليس نصيحة طبية: استشر طبيباً قبل أي تغيير كبير في غذائك أو تمارينك.`},
+  fb:{time:{en:`20 minutes`,ar:`20 دقيقة`}},
+  q:[Q('aim',`What do you want?`,`ماذا تريد؟`,[op('lose',`lose weight`,`إنقاص الوزن`),op('muscle',`build muscle`,`بناء العضلات`),op('fit',`get fitter`,`زيادة اللياقة`),op('keep',`keep the weight off`,`الحفاظ على الوزن`)]),
+   Q('time',`How much time can you give on most days?`,`كم من الوقت تستطيع تخصيصه في معظم الأيام؟`,[op('15',`15 minutes`,`15 دقيقة`),op('30',`30 minutes`,`30 دقيقة`),op('45',`45 minutes`,`45 دقيقة`,`45 minutes or more`,`45 دقيقة أو أكثر`)]),
+   Q('hard',`What is hardest for you?`,`ما أصعب شيء عليك؟`,[op('eat',`Eating well`,`الأكل الصحي`),op('move',`Moving enough`,`الحركة الكافية`),op('stay',`Staying consistent`,`الاستمرار`),op('sleep',`Sleep and stress`,`النوم والتوتر`)])],
+  steps:[
+   st(0,`Weigh yourself tomorrow morning after the bathroom and before eating. Write the number in your phone notes (e.g. "Day 1: 84.2 kg").`,`قِس وزنك غداً صباحاً بعد دورة المياه وقبل الأكل. دوّن الرقم في ملاحظات هاتفك (مثال: «اليوم 1: 84.2 كغ»).`,`Just step on the scale`,`قف على الميزان فقط`),
+   st(0,`Take 3 photos (front, side, back) and measure your waist at the navel. The scale alone hides progress.`,`التقط 3 صور (من الأمام والجانب والخلف) وقِس خصرك عند السرة. الميزان وحده يخفي التقدم.`,`Take just the front photo`,`التقط صورة الأمام فقط`),
+   st(0,`Set your target weight and date. A pace of about 0.5 to 1 kg a week is generally considered safe, so 8 kg takes roughly 8 to 16 weeks.`,`حدّد وزنك المستهدف وتاريخه. وتيرة تقارب 0.5 إلى 1 كغ أسبوعياً تُعدّ آمنة عموماً، فإنقاص 8 كغ يستغرق نحو 8 إلى 16 أسبوعاً.`,`Write only the target number`,`اكتب رقم الهدف فقط`,['aim',['lose']]),
+   st(0,`Write the one measurable target for your goal (e.g. "bench press 60 kg", "run 5 km without stopping") and the date.`,`اكتب هدفاً واحداً قابلاً للقياس (مثل «رفع 60 كغ في البنش» أو «ركض 5 كم دون توقف») وتاريخه.`,`Write only the number`,`اكتب الرقم فقط`,['aim',['muscle','fit','keep']]),
+   st(1,`For 2 days, photograph everything you eat and drink. Change nothing yet. This shows what you really eat.`,`لمدة يومين صوّر كل ما تأكله وتشربه. لا تغيّر شيئاً الآن. هذا يكشف ما تأكله فعلاً.`,`Photograph one meal`,`صوّر وجبة واحدة`),
+   st(1,`Pick the ONE meal or snack that hurts most (often the afternoon snack or late dinner) and write its default replacement, e.g. "2 eggs, fruit, coffee".`,`اختر وجبة أو سناكاً واحداً هو الأسوأ أثراً (غالباً سناك العصر أو العشاء المتأخر) واكتب بديله الجاهز، مثل «بيضتان وفاكهة وقهوة».`,`Name the meal only`,`اذكر الوجبة فقط`,['hard',['eat']]),
+   st(1,`Check your daily steps for 3 days, then set your step goal at that average plus 1,500.`,`راقب خطواتك اليومية لثلاثة أيام، ثم اجعل هدفك المتوسط مضافاً إليه 1500 خطوة.`,`Check today's steps`,`اطّلع على خطواتك اليوم`,['hard',['move']]),
+   st(1,`Link your workout to something you already do (after Fajr, after the work coffee, before the shower) and write the exact trigger sentence.`,`اربط تمرينك بشيء تفعله أصلاً (بعد الفجر، بعد قهوة العمل، قبل الاستحمام) واكتب جملة المحفّز بدقة.`,`Write the trigger only`,`اكتب المحفّز فقط`,['hard',['stay']]),
+   st(1,`Set a phone alarm 30 minutes before your target bedtime. Most adults need 7 or more hours, and poor sleep makes hunger harder to manage.`,`اضبط منبهاً قبل موعد نومك المستهدف بـ 30 دقيقة. معظم البالغين يحتاجون 7 ساعات أو أكثر، وقلة النوم تجعل التحكم بالجوع أصعب.`,`Set the alarm only`,`اضبط المنبه فقط`,['hard',['sleep']]),
+   st(1,`Plan tomorrow's lunch tonight: choose a protein, a carb and a vegetable, and write them down.`,`خطّط لغداء الغد الليلة: اختر بروتيناً وكربوهيدرات وخضاراً، ودوّنها.`,`Just choose the protein`,`اختر مصدر البروتين فقط`),
+   st(2,`Move for {time} today. A brisk walk counts. Health guidance for adults is about 150 minutes of moderate activity a week, for example 5 sessions of 30 minutes.`,`تحرّك {time} اليوم. المشي السريع يُحسب. التوصية الصحية للبالغين نحو 150 دقيقة من النشاط المعتدل أسبوعياً، مثل 5 جلسات من 30 دقيقة.`,`Walk for 5 minutes`,`امشِ 5 دقائق`),
+   st(2,`Choose 3 workout slots this week and add them to your calendar with exact times.`,`اختر 3 مواعيد للتمرين هذا الأسبوع وأضفها إلى تقويمك بوقت محدد.`,`Pick just one slot`,`اختر موعداً واحداً فقط`),
+   st(2,`Do your first strength session: squats, push-ups (on your knees if needed) and rows, 3 sets of 8 to 12 each, with a rest day after.`,`نفّذ أول جلسة قوة: سكوات وضغط (على الركبتين إن لزم) وتجديف، 3 مجموعات من 8 إلى 12 لكل تمرين، ثم يوم راحة.`,`Do one set of squats`,`نفّذ مجموعة سكوات واحدة`,['aim',['muscle','fit','lose']]),
+   st(3,`After 2 weeks, weigh yourself again, take the photos and compare with day one. Write the 3 numbers: weight, waist, weekly minutes of exercise.`,`بعد أسبوعين قِس وزنك مجدداً والتقط الصور وقارن بالبداية. دوّن 3 أرقام: الوزن والخصر ودقائق التمرين الأسبوعية.`,`Just weigh yourself`,`قِس وزنك فقط`),
+   st(3,`Write what worked and what did not. Keep the first, drop the second, and set the target for the next 4 weeks.`,`اكتب ما نجح وما لم ينجح. أبقِ الأول واترك الثاني، وحدّد هدف الأسابيع الأربعة القادمة.`,`Write one thing that worked`,`اكتب شيئاً واحداً نجح`)]},
+
+ money:{cl:'money',ph:[PH(`Map it`,`ارسم الصورة`),PH(`Rules`,`القواعد`),PH(`Test it`,`جرّب`),PH(`Scale it`,`وسّع`)],
+  ex:{en:`Example: Earn AED 3,000 a month extra from video editing`,ar:`مثال: كسب 3000 درهم إضافية شهرياً من المونتاج`},
+  note:{en:`Not financial advice. Check permits and your employment contract before you start earning.`,ar:`ليست نصيحة مالية. تحقق من التصاريح وعقد عملك قبل أن تبدأ الكسب.`},
+  fb:{amt:{en:`your target`,ar:`هدفك`}},
+  q:[Q('amt',`How much extra per month?`,`كم تريد إضافة شهرياً؟`,[op('1000',`AED 1,000`,`1000 درهم`),op('3000',`AED 3,000`,`3000 درهم`),op('5000',`AED 5,000`,`5000 درهم`),op('10000',`AED 10,000 or more`,`10000 درهم أو أكثر`)]),
+   Q('route',`How would you earn it?`,`كيف ستكسبه؟`,[op('skill',`Using my skills (services)`,`بمهاراتي (خدمات)`),op('sell',`Selling products`,`ببيع منتجات`),op('online',`Content or online work`,`بمحتوى أو عمل عبر الإنترنت`),op('invest',`Saving or investing more`,`بادخار أو استثمار أكثر`),op('unsure',`Not sure yet`,`لست متأكداً بعد`)]),
+   Q('hrs',`Hours per week you can give?`,`كم ساعة أسبوعياً تستطيع تخصيصها؟`,[op('4',`3 to 5`,`من 3 إلى 5`),op('8',`6 to 10`,`من 6 إلى 10`),op('12',`10 or more`,`10 أو أكثر`)])],
+  steps:[
+   st(0,`Open your bank app and write last month's income and expenses in 3 columns: income, fixed, flexible. Circle what you could cut.`,`افتح تطبيق البنك واكتب دخل الشهر الماضي ومصروفاته في 3 أعمدة: الدخل، الثابت، المرن. ضع دائرة حول ما يمكنك تقليصه.`,`Write your main income only`,`اكتب دخلك الأساسي فقط`),
+   st(0,`Write your target as a sentence: "I want AED {amt} extra a month by [date]". That is AED 12 times that a year.`,`اكتب هدفك كجملة: «أريد {amt} إضافية شهرياً بحلول [تاريخ]». لاحظ أنه يساوي 12 ضعفه في السنة.`,`Write just the date`,`اكتب التاريخ فقط`),
+   st(0,`List 3 skills people have paid you for or asked you for help with, and write who asked.`,`اكتب 3 مهارات دفع الناس مقابلها أو طلبوا مساعدتك فيها، ومن الذي طلب.`,`List one skill`,`اكتب مهارة واحدة`,['route',['skill','online','unsure']]),
+   st(0,`Choose 3 products you could sell and write for each: what it costs you, what you would charge, and your profit per item.`,`اختر 3 منتجات يمكنك بيعها واكتب لكل منها: تكلفتك، وسعر البيع، وربحك من كل قطعة.`,`Write one product idea`,`اكتب فكرة منتج واحدة`,['route',['sell']]),
+   st(0,`Check your emergency cushion: do you have about 3 months of expenses saved? Write the number. If not, make that the first target before investing.`,`تحقق من احتياطيك: هل لديك مدخرات تغطي نحو 3 أشهر من المصاريف؟ دوّن الرقم. إن لم يكن، فليكن هذا هدفك الأول قبل الاستثمار.`,`Write your monthly expenses`,`اكتب مصاريفك الشهرية فقط`,['route',['invest']]),
+   st(1,`Before earning, check the rules: a side income in the UAE needs the right permit (a freelance permit, a free-zone licence or a MOHRE part-time permit). Read your contract for consent or non-compete clauses, and note which route fits.`,`قبل أن تكسب تحقق من القواعد: الدخل الإضافي في الإمارات يحتاج التصريح المناسب (تصريح عمل حر أو رخصة منطقة حرة أو تصريح عمل بدوام جزئي من الوزارة). اقرأ عقدك بحثاً عن بنود الموافقة أو عدم المنافسة، ودوّن المسار المناسب.`,`Just read your contract's side-work clause`,`اقرأ بند العمل الإضافي في عقدك فقط`,['route',['skill','sell','online']]),
+   st(1,`Compare 2 or 3 savings or investment options. For each write: the fees, how fast you can withdraw, and the risk. Pick none yet.`,`قارن بين خيارين أو ثلاثة للادخار أو الاستثمار. لكل خيار اكتب: الرسوم، وسرعة السحب، والمخاطر. لا تختر بعد.`,`Look at one option`,`اطّلع على خيار واحد`,['route',['invest']]),
+   st(1,`Block {hrs} hours a week for this in your calendar. Treat them like a meeting.`,`خصّص ساعات أسبوعية لهذا في تقويمك ({hrs}). تعامل معها كأنها اجتماع.`,`Block just one hour`,`خصّص ساعة واحدة فقط`),
+   st(2,`Name your offer in one line: "I help [who] get [result] for AED [price]". Show it to one friend and ask if it is clear.`,`صغ عرضك في سطر واحد: «أساعد [من] على [نتيجة] مقابل [سعر] درهم». أره لصديق واسأله إن كان واضحاً.`,`Decide the price only`,`قرّر السعر فقط`),
+   st(2,`Message 5 people who might pay for it and ask if they are interested. Write the 5 names first.`,`راسل 5 أشخاص قد يدفعون مقابله واسألهم إن كانوا مهتمين. اكتب الأسماء الخمسة أولاً.`,`Message one person`,`راسل شخصاً واحداً`),
+   st(2,`Get your first paying customer or make your first sale. Then ask for a one-line testimonial.`,`احصل على أول عميل يدفع لك أو نفّذ أول عملية بيع. ثم اطلب شهادة من سطر واحد.`,`Follow up with one person`,`تابع مع شخص واحد`),
+   st(3,`Review: income earned, hours spent, and your hourly rate. Keep what pays best per hour.`,`راجع: الدخل المحقق، والساعات المستغرقة، وأجرك بالساعة. أبقِ على ما يدرّ أكثر لكل ساعة.`,`Write the income number only`,`اكتب رقم الدخل فقط`),
+   st(3,`Repeat the thing that worked 2 more times, and write what you will raise or automate.`,`كرّر ما نجح مرتين إضافيتين، واكتب ما ستزيده أو تؤتمته.`,`Plan the repeat only`,`خطّط للتكرار فقط`),
+   st(3,`Pick a fixed weekly day for a 10-minute money check, and put it in your calendar.`,`اختر يوماً أسبوعياً ثابتاً لمراجعة أموالك 10 دقائق وضعه في تقويمك.`,`Choose the day`,`اختر اليوم فقط`)]},
+
+ car:{cl:'money',ph:[PH(`Budget`,`الميزانية`),PH(`Choose`,`الاختيار`),PH(`Buy`,`الشراء`)],
+  ex:{en:`Example: Buy a reliable SUV for the family under AED 90,000`,ar:`مثال: شراء سيارة دفع رباعي موثوقة للعائلة بأقل من 90000 درهم`},
+  note:{en:`UAE fees and rules change. Confirm the current numbers with the RTA or your emirate's traffic authority.`,ar:`الرسوم والقواعد في الإمارات تتغيّر. تأكد من الأرقام الحالية لدى هيئة الطرق أو إدارة المرور في إمارتك.`},
+  fb:{kind:{en:`car`,ar:`السيارة`}},
+  q:[Q('pay',`How will you pay?`,`كيف ستدفع؟`,[op('cash',`Cash`,`نقداً`),op('loan',`Bank loan`,`قرض بنكي`),op('unsure',`Not sure yet`,`لست متأكداً بعد`)]),
+   Q('kind',`New or used?`,`جديدة أم مستعملة؟`,[op('new',`new car`,`سيارة جديدة`,`New`,`جديدة`),op('used',`used car`,`سيارة مستعملة`,`Used`,`مستعملة`),op('unsure',`car`,`السيارة`,`Not sure`,`لست متأكداً`)]),
+   Q('bud',`Your total budget?`,`ميزانيتك الإجمالية؟`,[op('50',`Under AED 50,000`,`أقل من 50000 درهم`),op('100',`AED 50,000 to 100,000`,`من 50000 إلى 100000 درهم`),op('200',`AED 100,000 to 200,000`,`من 100000 إلى 200000 درهم`),op('200p',`Over AED 200,000`,`أكثر من 200000 درهم`)])],
+  steps:[
+   st(0,`Write your real monthly cost of owning a {kind}: payment, insurance, fuel, Salik, parking and servicing. Decide the total you can afford without touching savings.`,`اكتب التكلفة الشهرية الحقيقية لامتلاك {kind}: القسط والتأمين والوقود وسالك والمواقف والصيانة. حدّد الإجمالي الذي تتحمله دون المساس بمدخراتك.`,`Write just the fuel cost`,`اكتب تكلفة الوقود فقط`),
+   st(0,`Check your documents: a valid UAE residence visa and Emirates ID, and a UAE driving licence (a foreign licence has to be converted before you can register a car).`,`تحقق من أوراقك: إقامة إماراتية سارية وهوية إماراتية ورخصة قيادة إماراتية (الرخصة الأجنبية يجب تحويلها قبل تسجيل سيارة).`,`Check your licence expiry date`,`تحقق من تاريخ انتهاء رخصتك`),
+   st(0,`Ask 2 banks for a car-loan estimate: rate, down payment, processing fee and early-settlement fee. Write them side by side.`,`اطلب من بنكين تقديراً لقرض سيارة: الفائدة والدفعة الأولى ورسوم المعالجة ورسوم السداد المبكر. اكتبها جنباً إلى جنب.`,`Ask one bank`,`اسأل بنكاً واحداً`,['pay',['loan','unsure']]),
+   st(1,`Shortlist 3 models. For each, get an insurance quote and check the yearly registration cost, fuel use and what it sells for after 3 years.`,`اختر 3 موديلات. لكل منها احصل على عرض تأمين واعرف تكلفة التسجيل السنوية واستهلاك الوقود وسعر إعادة البيع بعد 3 سنوات.`,`Shortlist just one model`,`اختر موديلاً واحداً فقط`),
+   st(1,`New car: ask 2 dealers for the all-in price in writing (VAT, registration, insurance, warranty and service plan).`,`سيارة جديدة: اطلب من وكيلين السعر الإجمالي كتابةً (الضريبة والتسجيل والتأمين والضمان وخطة الصيانة).`,`Ask one dealer`,`اسأل وكيلاً واحداً`,['kind',['new','unsure']]),
+   st(1,`Used car: check the Mulkiya, match the chassis number to the report, look up fines and accident history, and book an independent inspection before you pay.`,`سيارة مستعملة: افحص الملكية وطابق رقم الشاصي مع التقرير وتحقق من المخالفات وسجل الحوادث، واحجز فحصاً مستقلاً قبل الدفع.`,`Ask for the Mulkiya photo`,`اطلب صورة الملكية فقط`,['kind',['used','unsure']]),
+   st(1,`Test drive your top choice for at least 20 minutes: highway, parking, and the back seat. Write 3 things you liked and 3 you did not.`,`جرّب قيادة خيارك الأول 20 دقيقة على الأقل: طريق سريع ومواقف والمقعد الخلفي. دوّن 3 أشياء أعجبتك و3 لم تعجبك.`,`Book the test drive`,`احجز التجربة فقط`),
+   st(2,`Set your maximum price and a decision date, then negotiate: ask for the best price, a free service or extras, and walk away if it is above your number.`,`حدّد أعلى سعر وتاريخ القرار، ثم فاوض: اطلب أفضل سعر وصيانة أو إضافات مجانية، وانسحب إن تجاوز رقمك.`,`Write the max price only`,`اكتب أعلى سعر فقط`),
+   st(2,`Buy insurance in your name before registration or transfer. The RTA requires valid insurance first.`,`اشترِ التأمين باسمك قبل التسجيل أو نقل الملكية. هيئة الطرق تشترط تأميناً ساري المفعول أولاً.`,`Get one quote`,`احصل على عرض واحد`),
+   st(2,`Register or transfer the car with your Emirates ID, licence, insurance and the old Mulkiya (a new car is usually registered by the dealer; a used-car transfer costs a few hundred dirhams plus testing if required). Keep the new Mulkiya safe.`,`سجّل السيارة أو انقل ملكيتها بالهوية والرخصة والتأمين والملكية القديمة (السيارة الجديدة يسجلها الوكيل عادةً؛ ونقل المستعملة يكلّف بضع مئات من الدراهم مع الفحص إن لزم). احفظ الملكية الجديدة.`,`Check which documents you are missing`,`اعرف الأوراق الناقصة فقط`)]},
+
+ laptop:{cl:'money',ph:[PH(`Needs`,`الاحتياج`),PH(`Compare`,`المقارنة`),PH(`Buy`,`الشراء`)],
+  ex:{en:`Example: A laptop for editing 4K videos under AED 6,000`,ar:`مثال: لابتوب لمونتاج فيديو 4K بأقل من 6000 درهم`},
+  note:{en:`Big sale events (like White Friday in late November) can cut prices, so check timing before buying.`,ar:`مواسم التخفيضات الكبرى (مثل الجمعة البيضاء في أواخر نوفمبر) قد تخفض الأسعار، فتحقق من التوقيت قبل الشراء.`},
+  fb:{use:{en:`your work`,ar:`عملك`}},
+  q:[Q('use',`What is it mainly for?`,`لماذا تريده أساساً؟`,[op('work',`office work`,`العمل المكتبي`,`Work`,`العمل`),op('create',`video and design work`,`المونتاج والتصميم`,`Editing and design`,`مونتاج وتصميم`),op('game',`gaming`,`الألعاب`,`Gaming`,`ألعاب`),op('study',`studying`,`الدراسة`,`Study`,`دراسة`)]),
+   Q('bud',`Your budget?`,`ميزانيتك؟`,[op('3',`Under AED 3,000`,`أقل من 3000 درهم`),op('6',`AED 3,000 to 6,000`,`من 3000 إلى 6000 درهم`),op('10',`AED 6,000 to 10,000`,`من 6000 إلى 10000 درهم`),op('10p',`Over AED 10,000`,`أكثر من 10000 درهم`)]),
+   Q('os',`Windows or Mac?`,`ويندوز أم ماك؟`,[op('win',`Windows`,`ويندوز`),op('mac',`Mac`,`ماك`),op('any',`No preference`,`لا فرق`)])],
+  steps:[
+   st(0,`Write the 3 things you must do on it every week, and what slows you down on your current device.`,`اكتب 3 أشياء يجب أن تفعلها عليه كل أسبوع، وما الذي يبطئك في جهازك الحالي.`,`Write one thing`,`اكتب شيئاً واحداً`),
+   st(0,`Editing and design need at least 16 GB of RAM, a 512 GB SSD and a colour-accurate screen. Write your minimum specs.`,`المونتاج والتصميم يحتاجان 16 غيغابايت رام على الأقل وذاكرة SSD بسعة 512 غيغابايت وشاشة دقيقة الألوان. اكتب مواصفاتك الدنيا.`,`Write only the RAM`,`اكتب الرام فقط`,['use',['create']]),
+   st(0,`For gaming, a dedicated graphics card matters most, then 16 GB of RAM and good cooling. Write the games you play and their recommended specs.`,`في الألعاب أهم شيء كرت الشاشة المستقل، ثم 16 غيغابايت رام وتبريد جيد. اكتب الألعاب التي تلعبها ومواصفاتها الموصى بها.`,`Write the heaviest game`,`اكتب أثقل لعبة فقط`,['use',['game']]),
+   st(0,`For work or study, aim for 16 GB of RAM (8 GB is the bare minimum), an SSD and 8 hours of real battery life. Write your minimum specs.`,`للعمل أو الدراسة اهدف إلى 16 غيغابايت رام (8 هي الحد الأدنى فقط) وSSD وبطارية تدوم 8 ساعات فعلية. اكتب مواصفاتك الدنيا.`,`Write only the battery hours`,`اكتب ساعات البطارية فقط`,['use',['work','study']]),
+   st(0,`Set your maximum price and a buy-by date.`,`حدّد أعلى سعر وتاريخ الشراء.`,`Write the max price`,`اكتب أعلى سعر فقط`),
+   st(1,`Shortlist 3 laptops that meet your specs and put them in a table: price, RAM, storage, weight, battery, warranty.`,`اختر 3 لابتوبات تحقق مواصفاتك وضعها في جدول: السعر والرام والتخزين والوزن والبطارية والضمان.`,`Shortlist one`,`اختر واحداً فقط`),
+   st(1,`Read or watch 2 independent reviews for each (not the store's page). Write one problem each laptop has.`,`اقرأ أو شاهد مراجعتين مستقلتين لكل جهاز (وليس صفحة المتجر). اكتب مشكلة واحدة في كل جهاز.`,`Read one review`,`اقرأ مراجعة واحدة`),
+   st(1,`Check the warranty and where the service centre is in the UAE. Write how long a repair would take.`,`تحقق من الضمان ومكان مركز الصيانة في الإمارات. اكتب كم تستغرق عملية الإصلاح.`,`Check one warranty`,`تحقق من ضمان واحد`),
+   st(2,`Compare the price at 3 stores, including any sales or trade-in offers and the delivery fee. Write the lowest.`,`قارن السعر في 3 متاجر مع التخفيضات وعروض الاستبدال ورسوم التوصيل. اكتب أقلها.`,`Check one store`,`تحقق من متجر واحد`),
+   st(2,`Buy it, keep the invoice, and register the warranty the same day.`,`اشتره، واحتفظ بالفاتورة، وسجّل الضمان في اليوم نفسه.`,`Add it to the cart`,`أضفه إلى السلة فقط`)]},
+
+ marry:{cl:'life',ph:[PH(`Clarity`,`الوضوح`),PH(`Together`,`معاً`),PH(`Paperwork`,`الأوراق`),PH(`Plan`,`التخطيط`)],
+  ex:{en:`Example: Get engaged this year and marry next summer`,ar:`مثال: الخطوبة هذه السنة والزواج الصيف القادم`},
+  note:{en:`A theme with milestones, not a checklist. Legal requirements vary by emirate and situation, so confirm them with the official authority.`,ar:`محور بمراحل، وليس قائمة مهام. المتطلبات القانونية تختلف بحسب الإمارة والحالة، فتأكد منها لدى الجهة الرسمية.`},
+  q:[Q('stage',`Where are you now?`,`أين أنت الآن؟`,[op('think',`Thinking about it`,`أفكّر في الأمر`),op('partner',`I have a partner, not engaged`,`لدي شريك، دون خطوبة`),op('engaged',`Engaged`,`مخطوب`)]),
+   Q('when',`When are you aiming for?`,`متى تهدف؟`,[op('year',`Within a year`,`خلال سنة`),op('two',`In 1 to 2 years`,`خلال سنة إلى سنتين`),op('none',`No date yet`,`بلا موعد بعد`)]),
+   Q('first',`What worries you most?`,`ما أكثر ما يقلقك؟`,[op('money',`Money`,`المال`),op('family',`Family approval`,`موافقة العائلة`),op('date',`Venue and date`,`المكان والموعد`),op('paper',`Paperwork`,`الأوراق`)])],
+  steps:[
+   st(0,`Write the 3 values that matter most to you in a marriage, and one thing you will not compromise on.`,`اكتب القيم الثلاث الأهم لك في الزواج، وشيئاً واحداً لن تتنازل عنه.`,`Write one value`,`اكتب قيمة واحدة`),
+   st(0,`Write what "ready" means to you in 3 lines: money, home and timing.`,`اكتب ما تعنيه كلمة «جاهز» بالنسبة لك في 3 أسطر: المال والبيت والتوقيت.`,`Write just the money line`,`اكتب سطر المال فقط`),
+   st(1,`Have a relaxed talk with your partner about the future, no agenda. Ask each other the same 3 questions: where we live, children, money habits.`,`تحدّث مع شريكتك بهدوء عن المستقبل دون أجندة. اسألا بعضكما الأسئلة نفسها: أين نسكن، الأطفال، عادات المال.`,`Ask just one question`,`اطرح سؤالاً واحداً فقط`,['stage',['think','partner']]),
+   st(1,`Decide who you need to tell first (family, close friends) and plan how and when. Write the first sentence you will say.`,`قرّر من يجب أن تخبره أولاً (العائلة أو الأصدقاء المقرّبون) وخطّط كيف ومتى. اكتب الجملة الأولى التي ستقولها.`,`Write the first sentence`,`اكتب الجملة الأولى فقط`,['first',['family']]),
+   st(1,`List the big milestones (engagement, venue, paperwork) with a rough month for each, and who is involved in each.`,`اكتب المحطات الكبرى (الخطوبة والمكان والأوراق) مع شهر تقريبي لكل منها ومن يشارك فيها.`,`List the milestones only`,`اكتب المحطات فقط`),
+   st(2,`Marriage in the UAE needs a pre-marital medical screening for both of you, and reports are time-limited, so book it close to your date. Find where to do it in your emirate.`,`الزواج في الإمارات يتطلب فحصاً طبياً قبل الزواج للطرفين، والتقارير محدودة الصلاحية، لذا احجزه قريباً من موعدك. اعرف أين تجريه في إمارتك.`,`Find the nearest centre`,`اعرف أقرب مركز فقط`,['first',['paper']]),
+   st(2,`Confirm how and where the marriage is registered for your situation (Sharia court or an authorised marriage officer; civil options differ by emirate), and list the documents needed (Emirates ID, passports, residence visa for at least one of you in Dubai).`,`تأكد من كيفية ومكان تسجيل الزواج في حالتك (المحكمة الشرعية أو مأذون معتمد؛ والخيارات المدنية تختلف بحسب الإمارة)، واكتب الأوراق المطلوبة (الهوية والجوازات وإقامة لأحدكما على الأقل في دبي).`,`Write just the document list`,`اكتب قائمة الأوراق فقط`),
+   st(3,`Set a rough total budget and split it into 5 lines: venue, food, clothes, photos, other. Write the maximum for each.`,`ضع ميزانية إجمالية تقريبية وقسّمها إلى 5 بنود: المكان، الطعام، الملابس، التصوير، أخرى. اكتب الحد الأقصى لكل بند.`,`Write only the total`,`اكتب الإجمالي فقط`),
+   st(3,`Choose your target date and work backwards: put 3 checkpoints in your calendar (venue booked, paperwork done, invitations sent).`,`اختر موعدك المستهدف واعمل بالعكس: ضع 3 محطات في تقويمك (حجز المكان، إنهاء الأوراق، إرسال الدعوات).`,`Choose just the month`,`اختر الشهر فقط`)]},
+
+ learn:{cl:'growth',ph:[PH(`Aim`,`الهدف`),PH(`Routine`,`الروتين`),PH(`Practice`,`الممارسة`),PH(`Prove it`,`أثبت ذلك`)],
+  ex:{en:`Example: Hold a 5-minute conversation in French by June`,ar:`مثال: إجراء محادثة من 5 دقائق بالفرنسية بحلول يونيو`},
+  note:{en:`Short daily sessions beat long weekend ones.`,ar:`الجلسات اليومية القصيرة أفضل من الجلسات الطويلة في نهاية الأسبوع.`},
+  fb:{time:{en:`20 minutes`,ar:`20 دقيقة`},what:{en:`this`,ar:`هذا`}},
+  q:[Q('what',`What kind of thing is it?`,`ما نوع ما تتعلمه؟`,[op('lang',`a language`,`لغة`),op('music',`an instrument`,`آلة موسيقية`),op('skill',`a work skill`,`مهارة مهنية`),op('study',`an exam or course`,`اختبار أو دورة`)]),
+   Q('level',`Your level now?`,`مستواك الآن؟`,[op('zero',`Never started`,`لم أبدأ قط`),op('basic',`Beginner`,`مبتدئ`),op('mid',`Intermediate`,`متوسط`)]),
+   Q('time',`Time per day?`,`الوقت يومياً؟`,[op('10',`10 minutes`,`10 دقائق`),op('20',`20 minutes`,`20 دقيقة`),op('30',`30 minutes or more`,`30 دقيقة أو أكثر`)])],
+  steps:[
+   st(0,`Write what you will be able to DO when you have learned {what}, with a date (e.g. "play 3 songs", "pass the exam", "order lunch in French").`,`اكتب ما ستتمكن من فعله عندما تتعلم {what}، مع تاريخ (مثل «عزف 3 أغانٍ» أو «اجتياز الاختبار» أو «طلب الغداء بالفرنسية»).`,`Write just the date`,`اكتب التاريخ فقط`),
+   st(0,`Find ONE beginner course, book or video series and commit to it. Do not collect more until you finish it.`,`ابحث عن دورة أو كتاب أو سلسلة فيديو واحدة للمبتدئين والتزم بها. لا تجمع غيرها حتى تنتهي منها.`,`Find one resource`,`اعثر على مصدر واحد`,['level',['zero','basic']]),
+   st(0,`Take a 10-minute test to see what you already know, then pick material one level above it.`,`أجرِ اختباراً من 10 دقائق لتعرف ما تعرفه فعلاً، ثم اختر مادة أعلى بمستوى واحد.`,`Find a free test`,`ابحث عن اختبار مجاني`,['level',['mid']]),
+   st(1,`Attach {time} of practice to something you already do (after Fajr, on the commute, before dinner) and put it in your calendar as a daily event.`,`اربط {time} من الممارسة بشيء تفعله أصلاً (بعد الفجر، في طريقك، قبل العشاء) وضعها في تقويمك كموعد يومي.`,`Choose the trigger only`,`اختر المحفّز فقط`),
+   st(1,`Prepare your space: put what you need in one place (instrument, notebook, app on your home screen) so starting takes 10 seconds.`,`جهّز مكانك: ضع ما تحتاجه في مكان واحد (الآلة أو الدفتر أو التطبيق على الشاشة الرئيسية) ليستغرق البدء 10 ثوانٍ.`,`Move the app to your home screen`,`انقل التطبيق إلى الشاشة الرئيسية`),
+   st(2,`Do your first session today for {time}. Stop when the timer ends.`,`نفّذ أول جلسة اليوم لمدة {time}. توقف عند انتهاء المؤقت.`,`Do 5 minutes`,`نفّذ 5 دقائق`),
+   st(2,`Finish 5 sessions this week. After each one, write one thing you got wrong.`,`أكمل 5 جلسات هذا الأسبوع. بعد كل واحدة اكتب شيئاً واحداً أخطأت فيه.`,`Do one more session`,`نفّذ جلسة واحدة إضافية`),
+   st(2,`At the end of the week, review the mistakes and practise only those for one session.`,`في نهاية الأسبوع راجع أخطاءك وتدرّب عليها وحدها في جلسة واحدة.`,`Read your mistake list`,`اقرأ قائمة أخطائك فقط`),
+   st(3,`After 2 weeks, test yourself: record yourself or take a short quiz. Compare it with your first test.`,`بعد أسبوعين اختبر نفسك: سجّل نفسك أو أجرِ اختباراً قصيراً. قارنه باختبارك الأول.`,`Record 30 seconds`,`سجّل 30 ثانية`),
+   st(3,`Teach or show one thing you learned to another person. Explaining it locks it in.`,`اشرح أو أرِ شخصاً آخر شيئاً واحداً تعلمته. الشرح يثبّته.`,`Write what you would explain`,`اكتب ما ستشرحه فقط`)]},
+
+ house:{cl:'life',ph:[PH(`Money`,`المال`),PH(`Search`,`البحث`),PH(`Decide`,`القرار`)],
+  ex:{en:`Example: Buy a 2-bedroom apartment in Dubai within 2 years`,ar:`مثال: شراء شقة بغرفتين في دبي خلال سنتين`},
+  note:{en:`Not financial advice. Mortgage limits and fees change, so confirm the numbers with your bank and the land department.`,ar:`ليست نصيحة مالية. حدود التمويل العقاري ورسومه تتغيّر، فتأكد من الأرقام مع بنكك ودائرة الأراضي.`},
+  q:[Q('path',`Buy or rent?`,`شراء أم إيجار؟`,[op('buy',`Buy`,`شراء`),op('rent',`Rent`,`إيجار`),op('unsure',`Not sure yet`,`لست متأكداً بعد`)]),
+   Q('bud',`Your budget?`,`ميزانيتك؟`,[op('low',`Under AED 1 million (or rent under 60k a year)`,`أقل من مليون درهم (أو إيجار أقل من 60 ألفاً سنوياً)`),op('mid',`AED 1 to 2.5 million (rent 60k to 120k)`,`من 1 إلى 2.5 مليون (إيجار 60 إلى 120 ألفاً)`),op('high',`Over AED 2.5 million (rent over 120k)`,`أكثر من 2.5 مليون (إيجار أكثر من 120 ألفاً)`)]),
+   Q('first',`What matters most?`,`ما الأهم؟`,[op('area',`Area and commute`,`المنطقة والمواصلات`),op('size',`Size`,`المساحة`),op('price',`Price`,`السعر`),op('family',`Schools and family`,`المدارس والعائلة`)])],
+  steps:[
+   st(0,`Write what your home needs: area, number of bedrooms, and your top 3 must-haves.`,`اكتب ما يحتاجه بيتك: المنطقة وعدد الغرف وأهم 3 أشياء لا غنى عنها.`,`Write only the area`,`اكتب المنطقة فقط`),
+   st(0,`Buying: an expat's first home up to AED 5 million usually needs at least 20% down, plus about 6 to 7% in fees (transfer fee 4%, registration, valuation). Calculate the cash you need for your budget.`,`الشراء: المقيم الأجنبي في أول بيت حتى 5 ملايين درهم يحتاج عادةً دفعة أولى لا تقل عن 20% إضافة إلى نحو 6 إلى 7% رسوماً (رسم النقل 4% والتسجيل والتقييم). احسب النقد المطلوب لميزانيتك.`,`Write only the total price`,`اكتب السعر الإجمالي فقط`,['path',['buy','unsure']]),
+   st(0,`Banks also cap total monthly debt at about 50% of income. Ask one bank for a pre-approval and write the loan amount they offer.`,`البنوك تحدد أيضاً إجمالي الأقساط الشهرية بنحو 50% من الدخل. اطلب موافقة مبدئية من بنك واحد واكتب مبلغ التمويل الذي يعرضه.`,`Ask one bank`,`اسأل بنكاً واحداً`,['path',['buy']]),
+   st(0,`Renting: write your monthly rent limit, and add the one-time costs (deposit, agency fee, Ejari registration, moving).`,`الإيجار: اكتب أقصى إيجار شهري، وأضف التكاليف لمرة واحدة (التأمين والعمولة وتسجيل إيجاري والنقل).`,`Write the monthly limit`,`اكتب الحد الشهري فقط`,['path',['rent']]),
+   st(1,`Choose 3 areas that fit your budget and "{first}" priority. For each, check commute time at rush hour.`,`اختر 3 مناطق تناسب ميزانيتك وأولويتك. لكل منطقة تحقق من وقت الوصول في ساعة الذروة.`,`Choose one area`,`اختر منطقة واحدة`),
+   st(1,`Visit 2 places in person or by video tour. Visit at different times (morning and evening) and write one thing you noticed about each.`,`زر مكانين شخصياً أو عبر جولة فيديو. زرهما في أوقات مختلفة (صباحاً ومساءً) واكتب ملاحظة عن كل منهما.`,`Book one viewing`,`احجز معاينة واحدة`),
+   st(1,`Check the building: service charges, age, parking, and the developer or landlord's reputation.`,`افحص المبنى: رسوم الخدمات وعمره والمواقف وسمعة المطوّر أو المالك.`,`Check the service charge`,`افحص رسم الخدمات فقط`),
+   st(2,`Compare your top 2 on one page: price, total monthly cost, commute, and your top 3 must-haves. Pick one.`,`قارن بين أفضل خيارين في صفحة واحدة: السعر والتكلفة الشهرية الإجمالية والمواصلات وأهم 3 متطلبات. اختر واحداً.`,`Write the monthly cost of each`,`اكتب التكلفة الشهرية لكل منهما`),
+   st(2,`Set the date for the next step (an offer, a deposit or a contract signing) and put it in your calendar.`,`حدّد موعد الخطوة التالية (عرض أو دفعة أو توقيع عقد) وضعه في تقويمك.`,`Choose the date`,`اختر التاريخ فقط`)]},
+
+ travel:{cl:'life',ph:[PH(`Plan`,`الخطة`),PH(`Book`,`الحجز`),PH(`Go`,`السفر`)],
+  ex:{en:`Example: A 10-day trip to Japan in April with my partner`,ar:`مثال: رحلة 10 أيام إلى اليابان في أبريل مع شريكي`},
+  note:{en:`Entry rules and prices change, so confirm them on the official site before booking.`,ar:`قواعد الدخول والأسعار تتغيّر، فتأكد منها على الموقع الرسمي قبل الحجز.`},
+  q:[Q('who',`Who is going?`,`من سيسافر؟`,[op('solo',`Just me`,`أنا وحدي`),op('partner',`With a partner`,`مع شريك`),op('family',`With family`,`مع العائلة`),op('friends',`With friends`,`مع الأصدقاء`)]),
+   Q('len',`How long?`,`كم المدة؟`,[op('wk',`A weekend`,`عطلة نهاية أسبوع`),op('w1',`About a week`,`نحو أسبوع`),op('w2',`Two weeks or more`,`أسبوعان أو أكثر`)]),
+   Q('bud',`Budget style?`,`نوع الميزانية؟`,[op('tight',`Tight`,`محدودة`),op('mid',`Comfortable`,`مريحة`),op('free',`Treat myself`,`مدلّلة`)])],
+  steps:[
+   st(0,`Choose the destination and the best month. Write one reason for each, and check the weather and any big holidays or events that month.`,`اختر الوجهة وأفضل شهر. اكتب سبباً لكل منهما، وتحقق من الطقس وأي عطلات أو فعاليات كبرى في ذلك الشهر.`,`Write the destination only`,`اكتب الوجهة فقط`),
+   st(0,`Set a total budget and split it roughly: flights 35%, stay 35%, food 15%, activities and extras 15%. Write the AED amount for each.`,`حدّد ميزانية إجمالية وقسّمها تقريباً: الطيران 35%، الإقامة 35%، الطعام 15%، الأنشطة والإضافات 15%. اكتب المبلغ بالدرهم لكل بند.`,`Write only the total`,`اكتب الإجمالي فقط`),
+   st(0,`Check entry rules for your passport (visa, and most countries want 6 months of passport validity and blank pages). Write the deadline to apply.`,`تحقق من شروط الدخول لجواز سفرك (التأشيرة، ومعظم الدول تطلب صلاحية 6 أشهر وصفحات فارغة). اكتب آخر موعد للتقديم.`,`Check passport expiry`,`تحقق من انتهاء الجواز فقط`),
+   st(0,`Ask your manager for the leave dates and put them in your calendar.`,`اطلب من مديرك أيام الإجازة وضعها في تقويمك.`,`Write the dates you want`,`اكتب التواريخ المطلوبة`,['len',['w1','w2']]),
+   st(1,`Check flight prices for 3 different date combinations and write the cheapest. Set a price alert.`,`قارن أسعار الطيران لثلاث تركيبات من التواريخ واكتب الأرخص. فعّل تنبيه الأسعار.`,`Check one date`,`تحقق من تاريخ واحد`),
+   st(1,`Book the flight, and a hotel with free cancellation. Save the confirmations in one folder.`,`احجز الرحلة وفندقاً بإلغاء مجاني. احفظ التأكيدات في مجلد واحد.`,`Book just the hotel`,`احجز الفندق فقط`),
+   st(1,`Buy travel insurance and write the emergency number and your embassy contact for the destination.`,`اشترِ تأمين السفر واكتب رقم الطوارئ وبيانات سفارتك في الوجهة.`,`Compare one plan`,`قارن خطة واحدة`),
+   st(2,`Plan 1 main activity per day, not 5. Add the bookings that sell out (tickets, restaurants).`,`خطّط لنشاط رئيسي واحد في اليوم وليس 5. احجز ما ينفد سريعاً (التذاكر والمطاعم).`,`Pick one activity`,`اختر نشاطاً واحداً`),
+   st(2,`3 days before: make a packing list, check passport, charger, cards and some local currency, and set an out-of-office reply.`,`قبل 3 أيام: اكتب قائمة الأغراض وتحقق من الجواز والشاحن والبطاقات وبعض العملة المحلية، وفعّل رد الغياب.`,`Write the list only`,`اكتب القائمة فقط`)]},
+
+ gen_money:GEN('money',`Write the exact amount you want (in AED) and the date you want it by.`,`اكتب المبلغ الذي تريده بالضبط (بالدرهم) والتاريخ الذي تريده فيه.`,[`Write just the amount`,`اكتب المبلغ فقط`],`Example: Save AED 20,000 for a deposit by June`,`مثال: ادخار 20000 درهم لدفعة أولى بحلول يونيو`),
+ gen_body:GEN('body',`Write today's baseline as a number: your weight, your weekly exercise minutes, or your hours of sleep.`,`اكتب نقطة البداية اليوم كرقم: وزنك أو دقائق تمرينك الأسبوعية أو ساعات نومك.`,[`Write just one number`,`اكتب رقماً واحداً فقط`],`Example: Sleep 7 hours a night`,`مثال: النوم 7 ساعات كل ليلة`),
+ gen_life:GEN('life',`Write what "done" looks like in one sentence, so you will know when you are there.`,`اكتب كيف يبدو «الإنجاز» في جملة واحدة لتعرف متى وصلت.`,[`Write 3 words`,`اكتب 3 كلمات`],`Example: Move to a bigger home before next year`,`مثال: الانتقال إلى بيت أكبر قبل السنة القادمة`),
+ gen_growth:GEN('growth',`Write what you will be able to do once you have learned this (for example "hold a 5-minute conversation").`,`اكتب ما ستتمكن من فعله عندما تتعلم هذا (مثل «إجراء محادثة من 5 دقائق»).`,[`Write just one thing`,`اكتب شيئاً واحداً فقط`],`Example: Pass the PMP exam by August`,`مثال: اجتياز اختبار PMP بحلول أغسطس`),
+ gen_create:GEN('create',`Describe the finished thing in one sentence and who it is for.`,`صف الشيء المكتمل في جملة واحدة ولمن هو.`,[`Write 3 words`,`اكتب 3 كلمات`],`Example: Release a 4-song EP`,`مثال: إصدار ألبوم صغير من 4 أغانٍ`)};
+
+/* ---------- daily quota: 3 tasks per goal per game-day, the day rolls at 3 AM ---------- */
+const QUOTA=3;
+const condOk=(c,a)=>!c||!!(a&&c[1].includes(a[c[0]]));
+const baseSteps=pb=>PB[pb].steps.map((s,i)=>i).filter(i=>condOk(PB[pb].steps[i][5],null)).map(i=>({i,done:false}));
+function applyIntake(g,why,a){
+  const old=new Map(g.steps.map(x=>[x.i,x]));g.intake={why:why||'',a};
+  g.steps=PB[g.pb].steps.map((s,i)=>i).filter(i=>condOk(PB[g.pb].steps[i][5],a)).map(i=>old.get(i)||{i,done:false});
+}
+function migrate(s){
+  if(!s||!Array.isArray(s.goals))return s;
+  if((s.v||0)<4){s.goals.forEach(g=>{if(!PB[g.pb])g.pb='gen_growth';g.intake=null;g.metric=null;g.steps=baseSteps(g.pb)});s.v=4;s.todayDone=[]}
+  s.profile=s.profile||{};if(!s.avatar||s.avatar==='brain'||!AV[s.avatar])s.avatar='spark';
+  return s;
+}
+
 const DET=[['laptop',/laptop|macbook|computer|لابتوب|حاسوب|كمبيوتر/i],['car',/\bcar\b|vehicle|سيار/i],['house',/\bhouse\b|apartment|villa|property|\bhome\b|بيت|منزل|شقة|فيلا|عقار/i],['marry',/marry|married|wedding|propos|زواج|أتزوج|اتزوج|تزوج|عرس|خطوبة/i],['travel',/\btrip\b|travel|vacation|holiday|visit|سافر|سفر|رحلة|إجازة|اجازة/i],
  ['creator',/content|creator|youtube|tiktok|instagram|vlog|podcast|influenc|صانع محتوى|محتوى|يوتيوب|تيك|انستغرام|بودكاست/i],['weight',/weight|lose|\bfat\b|diet|slim|fitness|get fit|gym|وزن|انقص|رجيم|دهون|لياقة|جيم/i],['learn',/learn|course|study|language|skill|\bread\b|guitar|piano|تعلم|دورة|دراس|لغة|مهار|قراءة|جيتار|بيانو/i],['money',/money|earn|income|salary|raise|business|freelanc|invest|hustle|اكسب|دخل|مال|مشروع|راتب|استثمار|عمل حر/i]];
 const CLASSIFY=[[/buy|save|money|income|invest|salary|business|rent|debt|earn|مال|ادخار|دخل|شراء|اشتري|دين/i,'money'],[/run|eat|sleep|health|walk|رياض|صح|مشي|نوم/i,'body'],[/family|move|home|kids|friend|relationship|عائل|أطفال|صديق/i,'life'],[/learn|study|book|تعلم|دراس|كتاب/i,'growth'],[/film|post|music|write|brand|design|فيلم|موسيق|تصميم|كتابة|قناة/i,'create']];
@@ -516,7 +701,7 @@ const splitThoughts=t=>t.split(/\n|;|؛|\.\s+|(?=\bi\s+(?:want|wanna|need)\b)|(?
 function makeGoal(raw,i){
   const k=pbKey(raw),p=PB[k];
   return {id:'g'+Date.now().toString(36)+i,title:cleanTitle(raw),pb:k,cluster:p.cl,active:false,deps:[],since:Date.now(),touches:[],
-    metric:p.metric?{start:p.metric.start,target:p.metric.target,cur:p.metric.start,log:[],pb:true}:null,steps:p.steps.map((_,j)=>({i:j,done:false}))};
+    intake:null,steps:baseSteps(k)};
 }
 function linkDeps(){
   const money=S.goals.find(g=>g.pb==='money'),lap=S.goals.find(g=>g.pb==='laptop');
@@ -524,24 +709,21 @@ function linkDeps(){
 }
 
 /* ---------- state ---------- */
-const fresh=()=>({v:3,app:VERSION,name:'',avatar:'brain',onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[]});
+const fresh=()=>({v:4,app:VERSION,name:'',avatar:'spark',profile:{},onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[]});
 let S=store.get(KEY);if(!S||!Array.isArray(S.goals))S=fresh();
-S.avatar=S.avatar||'brain';
 const save=()=>store.set(KEY,S);
 const G=id=>S.goals.find(g=>g.id===id);
 const L=()=>isAr()?2:1;
 const gt=g=>g.title;
-const gs=(g,i)=>PB[g.pb].steps[g.steps[i].i][L()];
-const gmini=(g,i)=>PB[g.pb].steps[g.steps[i].i][L()+2]||T('shrinkGeneric',gs(g,i));
+const fillT=(g,t)=>t.replace(/\{(\w+)\}/g,(m,k)=>{const p=PB[g.pb],v=g.intake&&g.intake.a&&g.intake.a[k],q=(p.q||[]).find(x=>x.id===k),o=q&&q.o.find(x=>x[0]===v);return o?o[L()]:((p.fb&&p.fb[k])||{})[lang]||''});
+const gs=(g,i)=>fillT(g,PB[g.pb].steps[g.steps[i].i][L()]);
+const gmini=(g,i)=>{const t=PB[g.pb].steps[g.steps[i].i][L()+2];return t?fillT(g,t):T('shrinkGeneric',gs(g,i))};
 const gph=(g,i)=>{const p=PB[g.pb];return p.ph?p.ph[p.steps[g.steps[i].i][0]][lang]:''};
 const gn=g=>(PB[g.pb].note||{})[lang]||'';
-const ml=g=>g.metric.pb?PB[g.pb].metric.label[lang]:g.metric.label;
-const mu=g=>g.metric.pb?PB[g.pb].metric.unit[lang]:g.metric.unit;
-const mFrac=m=>m.target===m.start?0:clamp((m.cur-m.start)/(m.target-m.start),0,1);
 const stepsDone=g=>g.steps.filter(x=>x.done).length;
-const fin=g=>g.steps.every(x=>x.done)&&(!g.metric||mFrac(g.metric)>=1);
-const prog=g=>{const sf=stepsDone(g)/g.steps.length;return g.metric?(sf+mFrac(g.metric))/2:sf};
-const nextStep=g=>g.steps.findIndex(x=>!x.done);
+const fin=g=>!!g.intake&&g.steps.every(x=>x.done);
+const prog=g=>stepsDone(g)/g.steps.length;
+const nextStep=g=>g.intake?g.steps.findIndex(x=>!x.done):-1;
 const doneN=()=>S.goals.reduce((a,g)=>a+stepsDone(g),0);
 const meanProg=()=>S.goals.length?S.goals.reduce((a,g)=>a+prog(g),0)/S.goals.length:0;
 const globalOrder=()=>clamp(S.base+(1-S.base)*Math.pow(meanProg(),.72),0,1);
@@ -550,7 +732,7 @@ const nodeOrder=g=>{let o=clamp(.05+.95*(.85*globalOrder()+.15*prog(g)),0,1);if(
 const calm=()=>Math.round(clamp(.04+.96*globalOrder(),0,1)*100);
 const activeList=()=>S.goals.filter(g=>g.active&&!fin(g));
 const markDay=()=>{const k=dayKey();if(!S.days.includes(k))S.days.push(k)};
-function events(){const ev=[];S.goals.forEach(g=>{g.steps.forEach(x=>{if(x.at)ev.push({at:x.at,g:g.id})});(g.touches||[]).forEach(t=>ev.push({at:t,g:g.id}));if(g.metric)g.metric.log.forEach(l=>ev.push({at:l.at||Date.parse(l.d)||Date.now(),g:g.id}))});return ev}
+function events(){const ev=[];S.goals.forEach(g=>{g.steps.forEach(x=>{if(x.at)ev.push({at:x.at,g:g.id})});(g.touches||[]).forEach(t=>ev.push({at:t,g:g.id}))});return ev}
 const lastTouch=g=>Math.max(g.since||0,...events().filter(e=>e.g===g.id).map(e=>e.at));
 const isShrunk=(g,i)=>g.active&&i>=0&&(Date.now()-lastTouch(g))/D>=((S.answers&&S.answers.pat===3)?2:3);
 
@@ -559,8 +741,9 @@ const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wid
 const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>';
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
 const AV={spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',leaf:'<path d="M6 18c0-8 5-12 12-12 0 8-4 12-12 12zM6 18l6-6"/>',moon:'<path d="M18 14.5A7 7 0 0 1 9.5 6 7 7 0 1 0 18 14.5z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',wave:'<path d="M3 12c3-6 6 6 9 0s6 6 9 0"/>',mount:'<path d="M3 19l6-10 4 6 3-4 5 8z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',bolt:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'};
-const AVKEYS=['brain',...Object.keys(AV)];
-const avHTML=k=>k==='brain'||!AV[k]?brainSVG(false):`<svg class="sym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${AV[k]}</svg>`;
+const AVKEYS=Object.keys(AV);
+S=migrate(S);
+const avHTML=k=>`<svg class="sym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${AV[k in AV?k:'spark']}</svg>`;
 const refreshAvatarBtn=()=>{$('#profBtn').innerHTML=avHTML(S.avatar)};
 function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').innerHTML=t==='dark'?SUN:MOON;store.set('projectBrain.theme',t)}
 setTheme(store.get('projectBrain.theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
@@ -653,11 +836,11 @@ function focusGoal(id){
   const n=nodes.find(m=>m.g.id===id);if(!n)return;
   const svg=$('#mapSvg'),r=svg.getBoundingClientRect(),p=new DOMPoint(r.left+r.width/2,r.top+r.height*.22).matrixTransform(svg.getScreenCTM().inverse());
   FOCUS.id=id;FOCUS.n=n;FOCUS.tx=p.x;FOCUS.ty=p.y;FOCUS.tk=1;
-  nodes.forEach(m=>m.el.classList.toggle('sel',m===n));$('#veil').classList.add('on');
+  nodes.forEach(m=>m.el.classList.toggle('sel',m===n));$('#veil').classList.add('on');$('#map').classList.add('foc');
   openGoal(id);
 }
 function unfocus(){
-  if(!FOCUS.id)return;FOCUS.id=null;FOCUS.tk=0;nodes.forEach(m=>m.el.classList.remove('sel'));$('#veil').classList.remove('on');
+  if(!FOCUS.id)return;FOCUS.id=null;FOCUS.tk=0;nodes.forEach(m=>m.el.classList.remove('sel'));$('#veil').classList.remove('on');$('#map').classList.remove('foc');
 }
 function paint(){
   nodes.forEach(n=>{
@@ -751,24 +934,43 @@ $('#scrim').onclick=closeSheets;
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
 function pulse(){const mg=$('#mapGroup');mg.classList.remove('pulse');void mg.getBoundingClientRect();mg.classList.add('pulse')}
 
-/* ---------- Today: moves from your priorities; asks to pick if none ---------- */
+/* ---------- Today ---------- */
+/* ---------- Today + goal sheet: tasks (max 3 per goal per day) and the intake ---------- */
+const doneTodayIdx=g=>g.steps.map((x,k)=>k).filter(k=>g.steps[k].done&&g.steps[k].at&&dayKey(g.steps[k].at)===dayKey());
+const doneToday=g=>doneTodayIdx(g).length;
+const leftToday=g=>Math.max(0,QUOTA-doneToday(g));
+const todayTasks=g=>{const out=[],n=leftToday(g);for(let k=0;k<g.steps.length&&out.length<n;k++)if(!g.steps[k].done)out.push(k);return out};
+const untilReset=()=>{const n=new Date(),t=new Date(n);t.setHours(3,0,0,0);if(t<=n)t.setDate(t.getDate()+1);const m=Math.max(1,Math.round((t-n)/6e4));return Math.floor(m/60)+(isAr()?' س ':'h ')+(m%60)+(isAr()?' د':'m')};
+const CHK='<span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>';
 function todayMoves(){
-  const m=[];activeList().forEach(g=>{const i=nextStep(g);if(i>=0)m.push({g,i,done:false})});
-  (S.todayDone||[]).filter(x=>x.d===new Date().toDateString()).forEach(x=>{const g=G(x.id);if(g)m.push({g,i:x.i,done:true})});
-  return m;
+  const m=[];activeList().forEach(g=>{
+    if(!g.intake){m.push({g,i:-1,done:false});return}
+    doneTodayIdx(g).forEach(i=>m.push({g,i,done:true}));
+    todayTasks(g).forEach(i=>m.push({g,i,done:false}));
+  });return m;
 }
 function completeStep(gid,i){
-  const g=G(gid);if(!g||g.steps[i].done)return;
+  const g=G(gid);if(!g||!g.intake||g.steps[i].done)return;
+  if(leftToday(g)<=0){toast(T('quotaFull',untilReset()));return}
   const before=calm();g.steps[i].done=true;g.steps[i].at=Date.now();markDay();
-  S.todayDone=(S.todayDone||[]).filter(x=>x.d===new Date().toDateString());S.todayDone.push({id:gid,i,d:new Date().toDateString()});
   if(fin(g))g.active=false;
   save();paint();pulse();
-  const d=calm()-before;toast(fin(g)?T('goalSettled',gt(g)):T('settled')+(d>0?' +'+d+'%':''));checkBadges();
+  const d=calm()-before;
+  toast(fin(g)?T('goalSettled',gt(g)):leftToday(g)===0?T('dayDone',untilReset()):T('settled')+(d>0?' +'+d+'%':''));checkBadges();
 }
 function touchGoal(gid){const g=G(gid);g.touches=g.touches||[];g.touches.push(Date.now());markDay();save();paint();pulse();toast(T('touchToast'));checkBadges()}
 function parkGoal(g){g.active=false;S.flags.parked=1;save();paint();toast(T('parkedToast'));checkBadges()}
-function logMetric(id,v){const g=G(id),m=g.metric,before=calm();m.cur=v;m.log.push({d:dayKey(),v,at:Date.now()});markDay();S.flags.measured=1;
-  if(fin(g))g.active=false;save();paint();pulse();const d=calm()-before;toast(fin(g)?T('goalSettled',gt(g)):T('settled')+(d>0?' +'+d+'%':''));checkBadges()}
+const taskBtn=(g,k,done)=>{
+  const sm=!done&&k===nextStep(g)&&isShrunk(g,k);
+  return `<button class="tl ${done?'done':''}" data-g="${g.id}" data-k="${k}" data-sm="${sm?1:0}">${CHK}<span><div class="s">${esc(sm?gmini(g,k):gs(g,k))}</div>${sm?`<div class="g" style="margin:4px 0 0">${T('madeSmaller')}</div>`:''}</span></button>`;
+};
+function wireTasks(root,after){
+  root.querySelectorAll('.tl[data-k]').forEach(b=>b.onclick=()=>{
+    const g=G(b.dataset.g),k=+b.dataset.k;if(!g||g.steps[k].done)return;
+    if(!g.active){toast(T('focusFirst'));return}
+    if(b.dataset.sm==='1')touchGoal(g.id);else completeStep(g.id,k);after()});
+}
+
 let PICK=[];
 function openPicker(){
   const open=S.goals.filter(g=>!fin(g)),sh=$('#todaySheet');
@@ -790,78 +992,69 @@ function openToday(){
   if(!activeList().length)return openPicker();
   const m=todayMoves(),left=m.filter(x=>!x.done).length;
   const dt=new Date().toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'});
-  $('#todaySheet').innerHTML=`<div class="grab"></div><div class="tag">${dt}</div><h2>${left?T('yourMoves'):T('nothingLeft')}</h2>
-   ${m.map((x,k)=>{const sm=!x.done&&isShrunk(x.g,x.i);return `<button class="tl ${x.done?'done':''}" data-k="${k}"><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><div class="g">${esc(gt(x.g))}${sm?' · '+T('madeSmaller'):''}</div><div class="s">${esc(sm?gmini(x.g,x.i):gs(x.g,x.i))}</div></span></button>`}).join('')}
-   <p class="note" style="margin-top:18px">${left?T('todayHelp'):T('calmAt',calm())}</p>
+  const groups=activeList().map(g=>{
+    const head=`<div class="tag" style="margin:20px 0 0">${esc(gt(g))}${g.intake?' · '+doneToday(g)+' / '+QUOTA:''}</div>`;
+    if(!g.intake)return head+`<button class="opt" data-intake="${g.id}" style="margin-top:10px">${T('answerFirst')}</button>`;
+    return head+doneTodayIdx(g).map(k=>taskBtn(g,k,true)).join('')+todayTasks(g).map(k=>taskBtn(g,k,false)).join('')+(leftToday(g)===0?`<p class="note" style="margin:10px 0 0">${T('lockedS',untilReset())}</p>`:'');
+  }).join('');
+  $('#todaySheet').innerHTML=`<div class="grab"></div><div class="tag">${dt}</div><h2>${left?T('yourMoves'):T('nothingLeft')}</h2>${groups}
+   <p class="note" style="margin-top:22px">${left?T('todayHelp'):T('calmAt',calm())}</p>
    <div style="text-align:center"><button class="lnk" id="tPick">${T('pickChange')}</button></div>`;
-  $('#todaySheet').querySelectorAll('.tl').forEach(b=>b.onclick=()=>{const x=m[+b.dataset.k];if(!x.done){if(isShrunk(x.g,x.i))touchGoal(x.g.id);else completeStep(x.g.id,x.i);openToday()}});
+  wireTasks($('#todaySheet'),openToday);
+  $('#todaySheet').querySelectorAll('[data-intake]').forEach(b=>b.onclick=()=>openGoal(b.dataset.intake));
   $('#tPick').onclick=openPicker;
   openSheet('#todaySheet');
 }
 $('#todayBtn').onclick=()=>openToday();
 
-function spark(m){
-  const pts=[m.start,...m.log.map(l=>l.v)];if(pts.length<2)return '';
-  const lo=Math.min(...pts,m.target),hi=Math.max(...pts,m.target),sp=(hi-lo)||1,W=300,H=34;
-  const xy=pts.map((v,i)=>[i/(pts.length-1)*W,H-3-((v-lo)/sp)*(H-6)]);
-  const ty=H-3-((m.target-lo)/sp)*(H-6);
-  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><line x1="0" x2="${W}" y1="${ty}" y2="${ty}" stroke="currentColor" stroke-width=".6" stroke-dasharray="2 4" opacity=".5"/><polyline points="${xy.map(p=>p.map(f1).join(',')).join(' ')}" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/></svg>`;
+
+function intakeForm(g){
+  const p=PB[g.pb],a=Object.assign({},(g.intake&&g.intake.a)||{}),qlab=o=>lang==='ar'?(o[4]||o[2]):(o[3]||o[1]);
+  const ready=()=>p.q.every(q=>a[q.id]);
+  $('#goalSheet').innerHTML=`<div class="grab"></div><div class="tag">${T('intakeTag')}</div><h2>${esc(gt(g))}</h2><p class="note">${T('intakeSub')}</p>
+   <div class="tag" style="margin:18px 0 8px">${T('intakeWhy')}</div>
+   <textarea id="inWhy" maxlength="240" placeholder="${esc(p.ex[lang])}" style="min-height:84px;font-size:16px">${esc((g.intake&&g.intake.why)||'')}</textarea>
+   ${p.q.map(q=>`<div class="tag" style="margin:16px 0 8px">${esc(q[lang])}</div>`+q.o.map(o=>`<button class="opt ${a[q.id]===o[0]?'sel':''}" data-q="${q.id}" data-v="${o[0]}">${esc(qlab(o))}</button>`).join('')).join('')}
+   <button class="btn" id="inGo" style="margin-top:8px" ${ready()?'':'disabled'}>${T('intakeGo')}</button>
+   ${g.intake?`<div style="text-align:center;margin-top:14px"><button class="lnk" id="inBack">${T('cancel')}</button></div>`:''}`;
+  $('#goalSheet').querySelectorAll('.opt').forEach(b=>b.onclick=()=>{a[b.dataset.q]=b.dataset.v;
+    $('#goalSheet').querySelectorAll(`.opt[data-q="${b.dataset.q}"]`).forEach(x=>x.classList.toggle('sel',x===b));$('#inGo').disabled=!ready()});
+  $('#inGo').onclick=()=>{applyIntake(g,$('#inWhy').value.trim(),a);S.flags.planned=1;if(fin(g))g.active=false;save();paint();checkBadges();toast(T('planReady'));openGoal(g.id)};
+  const ib=$('#inBack');if(ib)ib.onclick=()=>openGoal(g.id);
+  openSheet('#goalSheet');
 }
-function trackHTML(g){
-  if(!g.metric)return `<button class="btn ghost" id="tAdd" style="margin-bottom:16px">${T('trackNumber')}</button>`;
-  const m=g.metric,mf=mFrac(m),u=esc(mu(g));
-  return `<div class="track"><div class="trow"><span class="tag">${esc(ml(g))}</span><button class="lnk" id="tEdit">${T('edit')}</button></div>
-   <div class="big">${fmt(m.cur)} <small>${u}</small></div><div class="sub">${T('target')}: ${fmt(m.target)} ${u}</div>
-   <div class="prog" style="margin:0 0 6px"><div class="bar"><i style="width:${mf*100}%"></i></div><span>${Math.round(mf*100)}%</span></div>
-   <div class="spark">${spark(m)}</div>
-   <div class="logrow"><input class="in" id="tVal" type="number" inputmode="decimal" placeholder="${T('now')}"><button class="btn" id="tLog">${T('logToday')}</button></div></div>`;
-}
-function trackForm(g){
-  const m=g.metric,ed=!!m,sug=PB[g.pb].sug;
-  const lab=ed?ml(g):(sug?sug.label[lang]:''),un=ed?mu(g):(sug?sug.unit[lang]:'');
-  $('#trackBox').innerHTML=`<div class="track"><div class="tag" style="margin-bottom:12px">${T('trackNumber')}</div>
-   <div class="g2"><input class="in full" id="fLabel" placeholder="${T('label')}" value="${esc(lab)}"><input class="in" id="fUnit" placeholder="${T('unit')}" value="${esc(un)}"><span></span>
-   <input class="in" id="fStart" type="number" inputmode="decimal" placeholder="${T('start')}" value="${ed?m.start:''}"><input class="in" id="fTarget" type="number" inputmode="decimal" placeholder="${T('target')}" value="${ed?m.target:''}"></div>
-   <div class="logrow"><button class="btn ghost" id="fCancel" style="flex:1">${T('cancel')}</button><button class="btn" id="fSave" style="flex:1">${T('save')}</button></div></div>`;
-  $('#fCancel').onclick=()=>openGoal(g.id);
-  $('#fSave').onclick=()=>{
-    const a=parseFloat($('#fStart').value),b=parseFloat($('#fTarget').value);if(isNaN(a)||isNaN(b))return;
-    g.metric={label:$('#fLabel').value.trim()||gt(g),unit:$('#fUnit').value.trim(),start:a,target:b,cur:ed?m.cur:a,log:ed?m.log:[],pb:false};
-    save();paint();openGoal(g.id);
-  };
-}
-function roadmap(g,i){
+function roadmap(g,cur){
   const p=PB[g.pb];let out='',last=-1;
   g.steps.forEach((x,k)=>{const ph=p.steps[x.i][0];
     if(p.ph&&ph!==last){out+=`<div class="phh">${p.ph[ph][lang]}</div>`;last=ph}
-    out+=`<div class="s ${x.done?'d':k===i?'cur':''}">${esc(gs(g,k))}</div>`});
+    out+=`<div class="s ${x.done?'d':cur.includes(k)?'cur':''}">${esc(gs(g,k))}</div>`});
   return out;
 }
 let delArm=false;
 function openGoal(id){
-  const g=G(id);if(!g)return;const p=prog(g),i=nextStep(g),n=stepsDone(g),f=fin(g);delArm=false;
+  const g=G(id);if(!g)return;
+  if(!g.intake)return intakeForm(g);
+  const p=prog(g),n=stepsDone(g),f=fin(g);delArm=false;
   const deps=g.deps.map(d=>G(d)).filter(Boolean),unl=S.goals.filter(o=>o.deps.includes(g.id));
   const rel=[deps.length?T('leansOn')+' '+deps.map(gt).join(', '):'',unl.length?T('unlocks')+' '+unl.map(gt).join(', '):''].filter(Boolean).join(' · ');
-  const sm=!f&&isShrunk(g,i),ph=i>=0?gph(g,i):'';
-  const card=f?'':i>=0?(sm
-    ?`<div class="move"><div class="lbl">${T('madeSmaller')}</div><div class="txt">${esc(gmini(g,i))}</div><div class="two">${T('shrinkNote')}</div><button class="small" id="gFull">${T('fullDone')}</button></div>`
-    :`<div class="move"><div class="lbl">${g.active?T('todayMove'):T('firstMove')}${ph?' · '+ph:''}</div><div class="txt">${esc(gs(g,i))}</div><div class="two">${T('twoMin')}</div></div>`)
-    :`<div class="move"><div class="lbl">${T('allSet')}</div><div class="txt">${T('allSetSub')}</div></div>`;
+  const dn=doneTodayIdx(g),tk=todayTasks(g),left=leftToday(g);
+  const card=f?`<div class="move"><div class="lbl">${T('allSet')}</div><div class="txt">${T('allSetSub')}</div></div>`
+   :`<div class="move"><div class="lbl">${g.active?T('todayTasks'):T('firstTasks')} · ${dn.length} / ${QUOTA}</div>${dn.map(k=>taskBtn(g,k,true)).join('')}${tk.map(k=>taskBtn(g,k,false)).join('')}
+     ${left===0?`<div class="txt" style="margin:12px 0 6px">${T('lockedT')}</div><div class="two">${T('lockedS',untilReset())}</div>`:`<div class="two" style="margin-top:12px">${T('quotaNote')}</div>`}</div>`;
   $('#goalSheet').innerHTML=`<div class="grab"></div>
    <div class="tag">${T('cl_'+g.cluster)} · ${f?T('settledTag'):g.active?T('inFocus'):T('parkedTag')}</div><h2>${esc(gt(g))}</h2>
+   ${g.intake.why?`<p class="note" style="margin:-2px 0 12px">${T('yourAim')}: ${esc(g.intake.why)}</p>`:''}
    <div class="prog"><div class="bar"><i style="width:${p*100}%"></i></div><span>${n} / ${g.steps.length}</span></div>
-   ${card}<div id="trackBox">${trackHTML(g)}</div>
-   <div class="next">${roadmap(g,i)}</div>
+   ${card}
+   <div class="next">${roadmap(g,tk)}</div>
    <p class="note">${rel?esc(rel)+'.<br>':''}${esc(gn(g))}</p>
-   <div class="row">${f?'':g.active?`${i>=0?`<button class="btn" id="gDone">${T('done')}</button>`:''}<button class="btn ghost" id="gPark" style="${i>=0?'width:auto;padding:0 22px':''}">${T('park')}</button>`:`<button class="btn" id="gAct">${T('focus')}</button>`}</div>
-   <div style="text-align:center;margin-top:18px"><button class="lnk" id="gDel">${T('del')}</button></div>`;
-  const d=$('#gDone');if(d)d.onclick=()=>{if(sm)touchGoal(id);else completeStep(id,i);openGoal(id)};
-  const gf=$('#gFull');if(gf)gf.onclick=()=>{completeStep(id,i);openGoal(id)};
+   <div class="row">${f?'':g.active?`<button class="btn ghost" id="gPark">${T('park')}</button>`:`<button class="btn" id="gAct">${T('focus')}</button>`}</div>
+   <div style="text-align:center;margin-top:18px"><button class="lnk" id="gRe">${T('intakeEdit')}</button></div>
+   <div style="text-align:center;margin-top:12px"><button class="lnk" id="gDel">${T('del')}</button></div>`;
+  wireTasks($('#goalSheet'),()=>openGoal(id));
   const pk=$('#gPark');if(pk)pk.onclick=()=>{parkGoal(g);openGoal(id)};
   const ac=$('#gAct');if(ac)ac.onclick=()=>{if(activeList().length>=3){toast(T('focusFull'));return}g.active=true;g.since=Date.now();save();paint();checkBadges();openGoal(id)};
-  const ta=$('#tAdd');if(ta)ta.onclick=()=>trackForm(g);
-  const te=$('#tEdit');if(te)te.onclick=()=>trackForm(g);
-  const tl=$('#tLog');if(tl)tl.onclick=()=>{const v=parseFloat($('#tVal').value);if(isNaN(v))return;logMetric(id,v);openGoal(id)};
+  $('#gRe').onclick=()=>intakeForm(g);
   $('#gDel').onclick=()=>{if(!delArm){delArm=true;$('#gDel').textContent=T('delConfirm');return}
     S.goals=S.goals.filter(x=>x!==g);S.goals.forEach(x=>{x.deps=x.deps.filter(y=>y!==id)});save();closeSheets();build()};
   openSheet('#goalSheet');
@@ -929,7 +1122,7 @@ const BADGES=[
  {id:'lock',sh:'lock',en:['Locked in','Three goals in focus.'],ar:['تركيز كامل','ثلاثة أهداف قيد التركيز.'],ok:()=>activeList().length>=3||!!S.flags.locked},
  {id:'park',sh:'plus',en:['Let go','You parked a goal without guilt.'],ar:['تخلٍّ هادئ','أجّلت هدفاً دون شعور بالذنب.'],ok:()=>!!S.flags.parked},
  {id:'fin',sh:'check',en:['Finisher','You settled a goal.'],ar:['منجِز','أنهيت هدفاً.'],ok:()=>S.goals.some(fin)},
- {id:'meas',sh:'rule',en:['Measured','You logged a number.'],ar:['مقيس','سجّلت رقماً.'],ok:()=>!!S.flags.measured},
+ {id:'plan',sh:'rule',en:['Planner','You answered the questions and got a real plan.'],ar:['مخطِّط','أجبت عن الأسئلة وحصلت على خطة حقيقية.'],ok:()=>S.goals.some(g=>g.intake)},
  {id:'spread',sh:'up',en:['Spread it','You shared the app.'],ar:['ناشر','شاركت التطبيق.'],ok:()=>!!S.flags.shared}];
 const bname=b=>b[lang][0],bdesc=b=>b[lang][1];
 function checkBadges(silent){
@@ -944,10 +1137,15 @@ let profTab='me',resetArm=false;
 function openProfile(){profTab='me';renderProfile();$('#profile').classList.add('open');closeSheets()}
 function closeProfile(){$('#profile').classList.remove('open')}
 $('#profBtn').onclick=openProfile;
+const ageOf=b=>{if(!b)return null;const d=new Date(b);if(isNaN(d))return null;const n=new Date();let a=n.getFullYear()-d.getFullYear();if(n.getMonth()<d.getMonth()||(n.getMonth()===d.getMonth()&&n.getDate()<d.getDate()))a--;return a>=0&&a<120?a:null};
 const rowBtn=(id,k)=>`<button class="rw" id="${id}"><span>${T(k)}</span><span class="ar">›</span></button>`;
 function meHTML(){
   const earned=BADGES.filter(b=>S.badges.includes(b.id)).length,pt=patterns();
   return `<div class="idc"><div class="avatar">${avHTML(S.avatar)}</div><input class="name" id="nameIn" placeholder="${T('namePh')}" value="${esc(S.name||'')}" maxlength="24"></div>
+   <div class="sec"><h3>${T('aboutYou')}</h3></div>
+   <div class="rw" style="cursor:default"><span>${T('birth')}</span><input class="in" id="bIn" type="date" max="${dayKey()}" value="${esc((S.profile||{}).birth||'')}" style="width:auto;min-width:150px"></div>
+   <div class="rw" style="cursor:default"><span>${T('gender')}</span><div class="seg"><button data-gn="m" class="${(S.profile||{}).gender==='m'?'on':''}">${T('male')}</button><button data-gn="f" class="${(S.profile||{}).gender==='f'?'on':''}">${T('female')}</button></div></div>
+   ${ageOf((S.profile||{}).birth)!==null?`<p class="note" style="margin-top:8px">${T('ageYears',ageOf(S.profile.birth))}</p>`:''}
    <div class="sec"><h3>${T('avatarT')}</h3></div>
    <div class="avgrid">${AVKEYS.map(k=>`<button class="avb ${S.avatar===k?'on':''}" data-a="${k}">${avHTML(k)}</button>`).join('')}</div>
    <div class="stats"><div><b>${calm()}%</b><span>${T('calm')}</span></div><div><b>${doneN()}</b><span>${T('moves')}</span></div><div><b>${S.days.length}</b><span>${T('activeDays')}</span></div></div>
@@ -963,7 +1161,11 @@ function setHTML(){
    <p class="note" style="margin-top:22px">${T('moreSoon')}</p>`;
 }
 function aboutHTML(){
+  const flow=T('flow');
   return `<h2 style="font-size:24px;font-weight:300;margin:6px 0 4px">${T('brand')}</h2><p class="note">${T('aboutVer',VERSION)}</p>
+   <div class="flowrow">${flow.map((x,i)=>`<span>${esc(x)}</span>${i<flow.length-1?'<i>›</i>':''}`).join('')}</div>
+   ${T('aboutS').map(x=>`<div class="sec"><h3>${esc(x.t)}</h3></div>${x.b.map(l=>`<p class="note">${esc(l)}</p>`).join('')}`).join('')}
+   <div class="sec"><h3>${T('aboutPrivT')}</h3></div>
    <p class="note">${T('aboutPriv')}</p><p class="note">${T('aboutMed')}</p>
    <p class="note">${T('aboutFb')}: <a class="mail" href="mailto:${DEV_EMAIL}">${DEV_EMAIL}</a></p>
    ${rowBtn('rMsg','msgDev')}`;
@@ -978,6 +1180,8 @@ function renderProfile(){
   on('#pClose',closeProfile);
   document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{profTab=b.dataset.t;renderProfile();$('#profile').scrollTop=0});
   const ni=$('#nameIn');if(ni)ni.onchange=e=>{S.name=e.target.value.trim();save()};
+  const bi=$('#bIn');if(bi)bi.onchange=e=>{S.profile=S.profile||{};S.profile.birth=e.target.value;save();renderProfile()};
+  document.querySelectorAll('[data-gn]').forEach(b=>b.onclick=()=>{S.profile=S.profile||{};S.profile.gender=S.profile.gender===b.dataset.gn?'':b.dataset.gn;save();renderProfile()});
   document.querySelectorAll('.avb').forEach(b=>b.onclick=()=>{S.avatar=b.dataset.a;save();refreshAvatarBtn();renderProfile()});
   document.querySelectorAll('.bd').forEach(b=>b.onclick=()=>{const x=BADGES.find(y=>y.id===b.dataset.b);toast(bname(x)+' · '+bdesc(x))});
   on('#rRev',openReview);
@@ -1007,7 +1211,7 @@ function exportData(){
 $('#restoreIn').onchange=e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const j=JSON.parse(r.result);if(!j||j.app!=='project-brain'||!j.state||!Array.isArray(j.state.goals))throw 0;
-    S=Object.assign(fresh(),j.state);S.avatar=S.avatar||'brain';save();build();refreshAvatarBtn();renderProfile();toast(T('restored'))}catch(err){toast(T('badFile'))}};
+    S=migrate(Object.assign(fresh(),j.state));save();build();refreshAvatarBtn();renderProfile();toast(T('restored'))}catch(err){toast(T('badFile'))}};
   r.readAsText(f);e.target.value='';
 };
 function openMsg(){
@@ -1084,7 +1288,7 @@ function showGate(){
 }
 
 /* ---------- first-run onboarding: sets how calm the map starts ---------- */
-const OB={step:0,name:'',feel:0,pat:0,text:'',list:[],picks:[]};
+const OB={step:0,name:'',birth:'',gender:'',feel:0,pat:0,text:'',list:[],picks:[]};
 const OBN=6;
 const SCORE={money:5,weight:4,creator:3,learn:2,marry:1.6,travel:1,house:1,laptop:.8,car:.8};
 const aiRank=()=>OB.list.map((x,i)=>({i,s:SCORE[pbKey(x)]||1.2})).sort((a,c)=>c.s-a.s||a.i-c.i);
@@ -1096,8 +1300,12 @@ function renderOb(keep){
   $('#obBack').style.visibility=(stp>0&&stp<5)?'visible':'hidden';$('#obBack').onclick=()=>obGo(stp-1);
   const next=(label,fn,dis)=>{f.innerHTML=`<button class="btn" id="obNext" ${dis?'disabled':''}>${label}</button>`;$('#obNext').onclick=fn};
   if(stp===0){
-    b.innerHTML=`<h1>${T('obWelcomeT')}</h1><p>${T('obWelcomeS')}</p><div class="tag" style="margin-bottom:8px">${T('obName')}</div><input class="in" id="obName" placeholder="${T('obNamePh')}" value="${esc(OB.name)}" maxlength="24" autocomplete="off"><p class="fine">${T('obPrivacy')}</p>`;
-    next(T('next'),()=>{OB.name=$('#obName').value.trim();obGo(1)});
+    b.innerHTML=`<h1>${T('obWelcomeT')}</h1><p>${T('obWelcomeS')}</p><div class="tag" style="margin-bottom:8px">${T('obName')}</div><input class="in" id="obName" placeholder="${T('obNamePh')}" value="${esc(OB.name)}" maxlength="24" autocomplete="off">
+      <div class="tag" style="margin:18px 0 8px">${T('birth')}</div><input class="in" id="obBirth" type="date" max="${dayKey()}" value="${esc(OB.birth)}">
+      <div class="tag" style="margin:18px 0 8px">${T('gender')}</div><div class="seg" id="obGen"><button data-gn="m" class="${OB.gender==='m'?'on':''}">${T('male')}</button><button data-gn="f" class="${OB.gender==='f'?'on':''}">${T('female')}</button></div>
+      <p class="fine">${T('obAboutHint')}</p><p class="fine">${T('obPrivacy')}</p>`;
+    b.querySelectorAll('#obGen button').forEach(x=>x.onclick=()=>{OB.gender=OB.gender===x.dataset.gn?'':x.dataset.gn;b.querySelectorAll('#obGen button').forEach(y=>y.classList.toggle('on',y.dataset.gn===OB.gender))});
+    next(T('next'),()=>{OB.name=$('#obName').value.trim();OB.birth=$('#obBirth').value;obGo(1)});
   }else if(stp===1||stp===2){
     const feel=stp===1,keys=feel?[5,4,3,2,1]:[1,2,3,4],pre=feel?'feel':'pat',cur=feel?OB.feel:OB.pat;
     b.innerHTML=`<h1>${T(feel?'obFeelT':'obPatT')}</h1><p></p>${keys.map(k=>`<button class="opt ${cur===k?'sel':''}" data-v="${k}">${T(pre+k)}</button>`).join('')}`;
@@ -1127,7 +1335,7 @@ function renderOb(keep){
   }
 }
 function createFromOb(){
-  S.name=OB.name;S.answers={feel:OB.feel,pat:OB.pat};
+  S.name=OB.name;S.profile={birth:OB.birth,gender:OB.gender};S.answers={feel:OB.feel,pat:OB.pat};
   S.goals=OB.list.map((t,i)=>makeGoal(t,i));OB.picks.forEach(i=>{if(S.goals[i])S.goals[i].active=true});linkDeps();
   const FB={5:.40,4:.28,3:.16,2:.08,1:.02},pen=clamp((OB.list.length-3)*.012,0,.1);
   S.base=Math.max(0,(FB[OB.feel]||.16)-pen);S.onboarded=true;S.flags.dumped=1;S.calm0=calm();S.created=Date.now();save();checkBadges(true);
@@ -1178,11 +1386,10 @@ function endTour(){TOUR.on=false;clearInterval(TOUR.iv);$('#tour').classList.rem
 applyLang();requestAnimationFrame(frame);
 if(!S.onboarded&&!store.get('projectBrain.langSet'))showGate();else runSplash();
 if(/[?&]demo/.test(location.search))window.__demo={
-  progress(f){const all=[];S.goals.forEach(g=>g.steps.forEach((x,i)=>all.push([g,x,i])));const n=Math.round(all.length*f),now=Date.now(),ev=k=>{const d=new Date(now-k*D);d.setHours(20,10);return d.getTime()};
+  progress(f){S.goals.forEach(g=>{if(!g.intake)applyIntake(g,'',Object.fromEntries((PB[g.pb].q||[]).map(q=>[q.id,q.o[0][0]])))});const all=[];S.goals.forEach(g=>g.steps.forEach((x,i)=>all.push([g,x,i])));const n=Math.round(all.length*f),now=Date.now(),ev=k=>{const d=new Date(now-k*D);d.setHours(20,10);return d.getTime()};
     all.forEach(([g,x],k)=>{x.done=k<n;if(x.done)x.at=ev((k*5)%8);else delete x.at});
-    S.goals.forEach(g=>{if(g.metric){const m=g.metric,sp=m.target-m.start;m.cur=m.start+sp*f*.8;m.log=[.2,.45,.8].map((y,j)=>({d:'',v:m.start+sp*f*y,at:ev(6-j*2)}))}});
-    S.days=[0,1,2,3,4,5,6].map(k=>new Date(now-k*D).toLocaleDateString('en-CA'));S.flags=Object.assign(S.flags,{dumped:1,parked:1,measured:1});save();checkBadges(true);paint()},
-  age(id,days){const g=G(id);g.since=Date.now()-days*D;g.touches=[];g.steps.forEach(x=>{if(x.at)x.at=Math.min(x.at,Date.now()-days*D)});g.metric&&g.metric.log.forEach(l=>l.at=Date.now()-days*D);save()},
+    S.days=[0,1,2,3,4,5,6].map(k=>new Date(now-k*D).toLocaleDateString('en-CA'));S.flags=Object.assign(S.flags,{dumped:1,parked:1});save();checkBadges(true);paint()},
+  age(id,days){const g=G(id);g.since=Date.now()-days*D;g.touches=[];g.steps.forEach(x=>{if(x.at)x.at=Math.min(x.at,Date.now()-days*D)});save()},
   open:openGoal,focus:focusGoal,today:openToday,view,theme:setTheme,profile:openProfile,review:openReview,replay:startReplay,endReplay,lang:setLang,tour:startTour,calm,state:()=>S};
 </script>
 </body>
