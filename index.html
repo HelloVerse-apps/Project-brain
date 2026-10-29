@@ -38,16 +38,21 @@ html[dir=rtl] .chev{display:inline-block;transform:scaleX(-1)}
 #meter .bar i{position:absolute;inset-inline-start:0;top:-.5px;height:2px;background:var(--ink);width:0;transition:width 1.6s cubic-bezier(.22,.8,.2,1)}
 .rb{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:border-color .6s;flex:none}
 .rb svg{width:15px;height:15px}
+#profBtn svg{width:18px;height:auto}
 body[data-view=map] #brand{opacity:0}
 body[data-view=map] #back{opacity:1;pointer-events:auto}
 body[data-view=map] #meter{opacity:1}
 
 #home{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .9s ease}
-#brainBtn{display:block;width:min(74vw,300px);transition:transform 1.1s cubic-bezier(.5,0,.2,1),opacity .9s ease}
-#brainBtn .float{animation:float 6.5s ease-in-out infinite}
-#brainBtn svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 22px rgba(238,138,163,.25))}
+#brainBtn{display:block;width:min(74vw,300px);transition:transform 1.1s cubic-bezier(.5,0,.2,1),opacity .9s ease;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
+#brainBtn .float{animation:float 6.5s ease-in-out infinite;perspective:800px}
+#brain3d{position:relative;transform-style:preserve-3d;will-change:transform}
+#brain3d .layer{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+#brain3d .layer svg{width:100%;height:auto;display:block}
+#brain3d .front svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 22px rgba(238,138,163,.25))}
 .shadow{width:120px;height:10px;border-radius:50%;background:var(--ink);opacity:.07;filter:blur(8px);margin-top:26px;animation:shadow 6.5s ease-in-out infinite}
-#hint{margin-top:34px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);animation:breathe 5s ease-in-out infinite}
+#hint{margin-top:30px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);animation:breathe 5s ease-in-out infinite}
+#homeToday{margin-top:22px;height:48px;padding:0 34px;font-size:15px}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
 @keyframes shadow{0%,100%{transform:scale(1);opacity:.08}50%{transform:scale(.8);opacity:.04}}
 @keyframes breathe{0%,100%{opacity:.35}50%{opacity:.85}}
@@ -56,14 +61,21 @@ body[data-view=map] #brainBtn{transform:scale(2.6)}
 
 #map{position:absolute;inset:0;opacity:0;pointer-events:none;transform:scale(.94);direction:ltr;transition:opacity 1s ease .35s,transform 1.2s cubic-bezier(.2,.8,.2,1) .2s}
 body[data-view=map] #map{opacity:1;pointer-events:auto;transform:scale(1)}
-#map svg{width:100%;height:100%;display:block}
+#map svg{width:100%;height:100%;display:block;touch-action:none}
 #mapGroup{transform-origin:0 0}
 #mapGroup.pulse{animation:pulse 1.6s ease-in-out}
 @keyframes pulse{0%{transform:scale(1)}40%{transform:scale(1.025)}100%{transform:scale(1)}}
-.node{cursor:pointer}
+.node{cursor:grab}
+.node.held{cursor:grabbing}
 .node .dot{transition:r .6s,fill .6s,opacity .6s,stroke .6s}
-.node text{font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;transition:opacity .8s}
+.node text{font-size:11px;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;transition:opacity .8s;pointer-events:none}
+.node.sel .dot,.node.sel text,.node.held text,.node.held .dot{opacity:1!important}
 .edge{fill:none;stroke:var(--ink);stroke-linecap:round}
+#veil{position:absolute;inset:0;z-index:15;pointer-events:none;opacity:0;transition:opacity .7s ease;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);background:rgba(255,255,255,.2);
+  -webkit-mask-image:radial-gradient(circle at var(--fx,50%) var(--fy,24%),transparent 62px,#000 190px);mask-image:radial-gradient(circle at var(--fx,50%) var(--fy,24%),transparent 62px,#000 190px)}
+:root[data-theme=dark] #veil{background:rgba(0,0,0,.28)}
+#veil.on{opacity:1}
 #insight{position:absolute;left:28px;right:28px;top:78px;text-align:center;font-size:13px;line-height:1.6;color:var(--mute);min-height:40px;transition:opacity .7s}
 #bottom{position:absolute;left:0;right:0;bottom:0;padding:0 20px calc(26px + env(safe-area-inset-bottom));display:flex;gap:10px;justify-content:center;z-index:20;opacity:0;transition:opacity .9s ease .5s;pointer-events:none}
 body[data-view=map] #bottom{opacity:1;pointer-events:auto}
@@ -82,12 +94,16 @@ body[data-replay=on] .node{pointer-events:none}
 .row{display:flex;gap:10px}
 #replayBar .row{justify-content:center}
 
-#scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .7s;z-index:65}
+#scrim{position:absolute;inset:0;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .7s,background .5s;z-index:65}
 #scrim.on{opacity:1;pointer-events:auto}
+#scrim.lite{background:transparent}
 .sheet{position:absolute;left:0;right:0;bottom:0;z-index:70;background:var(--sheet);border-radius:26px 26px 0 0;box-shadow:0 -20px 60px var(--shadow);padding:10px 26px calc(28px + env(safe-area-inset-bottom));
-  transform:translateY(106%);opacity:0;transition:transform .8s cubic-bezier(.22,.8,.2,1),opacity .6s ease;max-height:86%;overflow:auto}
+  transform:translateY(106%);opacity:0;transition:transform .8s cubic-bezier(.22,.8,.2,1),opacity .6s ease;max-height:86%;overflow:auto;overscroll-behavior:contain}
+#goalSheet{max-height:64%}
 .sheet.open{transform:translateY(0);opacity:1}
-.grab{width:36px;height:3px;border-radius:2px;background:var(--line);margin:4px auto 22px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:4px auto 22px}
+.xbtn{position:sticky;top:6px;float:right;z-index:4;width:34px;height:34px;margin:0 0 0 10px;border-radius:50%;border:1px solid var(--line);background:var(--sheet);display:grid;place-items:center;font-size:14px;color:var(--mute)}
+html[dir=rtl] .xbtn{float:left;margin:0 10px 0 0}
 .tag{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
 .sheet h2{font-size:26px;font-weight:300;margin:8px 0 18px;letter-spacing:0}
 .prog{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--mute);margin-bottom:22px}
@@ -131,48 +147,67 @@ textarea:focus{border-color:var(--mute)}
 .mic{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;flex:none;transition:all .4s}
 .mic svg{width:18px;height:18px}
 .mic.on{background:var(--ink);color:var(--bg);animation:breathe 1.6s ease-in-out infinite}
-#toast{position:absolute;left:50%;bottom:96px;transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:22px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s;z-index:110;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
+#toast{position:absolute;left:50%;bottom:96px;transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:11px 20px;border-radius:22px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .6s,transform .6s;z-index:130;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
 #profile{position:absolute;inset:0;z-index:60;background:var(--bg);opacity:0;pointer-events:none;transform:translateY(24px);transition:opacity .7s ease,transform .8s cubic-bezier(.22,.8,.2,1),background .7s;overflow:auto}
 #profile.open{opacity:1;pointer-events:auto;transform:none}
 .pbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;background:var(--bg);z-index:2}
 .pbody{padding:0 26px 60px}
-.idc{text-align:center;padding:6px 0 22px}
-.avatar{width:76px;height:76px;border-radius:50%;border:1px solid var(--line);margin:0 auto 14px;display:grid;place-items:center;font-size:30px;overflow:hidden}
-.avatar svg{width:52px;height:auto}
-.name{background:none;border:0;outline:0;text-align:center;font:inherit;font-size:22px;color:var(--ink);width:80%}
+.tabs{width:100%;margin:2px 0 22px}.tabs button{flex:1;padding:9px 6px}
+.idc{text-align:center;padding:0 0 14px}
+.avatar{width:72px;height:72px;border-radius:50%;border:1px solid var(--line);margin:0 auto 12px;display:grid;place-items:center;overflow:hidden}
+.avatar svg{width:50px;height:auto}
+.avatar svg.sym,.avb svg.sym{width:34px;height:34px}
+.name{background:none;border:0;outline:0;text-align:center;font:inherit;font-size:21px;color:var(--ink);width:80%}
 .name::placeholder{color:var(--mute)}
-.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:16px 0;margin-bottom:28px;text-align:center}
-.stats b{display:block;font-weight:300;font-size:24px}.stats span{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
-.sec{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 16px}
+.avgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:0 0 24px}
+.avb{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;transition:all .4s}
+.avb svg{width:26px;height:auto}.avb svg.sym{width:20px;height:20px}
+.avb.on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:22px;text-align:center}
+.stats b{display:block;font-weight:300;font-size:18px}.stats span{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 14px}
 .sec h3{margin:0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);font-weight:400}.sec span{font-size:12px;color:var(--mute)}
-.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:20px 8px;margin-bottom:30px}
-.bd{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
-.bd .ic{width:54px;height:54px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;opacity:.3;transition:all .6s}
+.badges{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 8px;margin-bottom:26px}
+.bd{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
+.bd .ic{width:46px;height:46px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;opacity:.3;transition:all .6s}
 .bd.on .ic{opacity:1;border-color:var(--ink)}
-.bd svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
-.bd span{font-size:11px;color:var(--mute);line-height:1.3}.bd.on span{color:var(--ink)}
-.pat{font-size:14px;color:var(--mute);line-height:1.7;margin:0 0 30px}.pat div{padding:6px 0}
+.bd svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+.bd span{font-size:10.5px;color:var(--mute);line-height:1.3}.bd.on span{color:var(--ink)}
+.pat{font-size:14px;color:var(--mute);line-height:1.7;margin:0 0 24px}.pat div{padding:6px 0}
 .rw{display:flex;justify-content:space-between;align-items:center;padding:18px 0;border-bottom:1px solid var(--line);width:100%;font-size:16px;text-align:start}
 .rw .ar{color:var(--mute);font-size:18px}html[dir=rtl] .rw .ar{transform:scaleX(-1)}
 .seg{display:flex;border:1px solid var(--line);border-radius:18px;overflow:hidden}
 .seg button{padding:6px 14px;font-size:13px;color:var(--mute);transition:all .4s}.seg button.on{background:var(--ink);color:var(--bg)}
 .rv3{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;margin:4px 0 22px}
 .rv3 b{display:block;font-weight:300;font-size:30px}.rv3 span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.mail{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+
+#gate{position:absolute;inset:0;z-index:120;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;padding:0 34px;text-align:center;direction:ltr;transition:opacity .9s ease}
+#gate.show{display:flex}#gate.gone{opacity:0;pointer-events:none}
+#gate .gb{width:150px;margin-bottom:26px;animation:float 6.5s ease-in-out infinite}#gate .gb svg{width:100%;height:auto;display:block}
+#gate h1{margin:0 0 10px;font-weight:300;font-size:13px;letter-spacing:.34em;text-transform:uppercase}
+#gate p{margin:0 0 36px;font-size:14px;color:var(--mute)}
+.gbtn{width:100%;max-width:300px;height:54px;border-radius:27px;border:1px solid var(--line);font-size:18px;margin-bottom:12px;transition:all .4s}
+.gbtn:active{transform:scale(.97);background:var(--ink);color:var(--bg)}
 
 #splash{position:absolute;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 1.1s ease}
 #splash.gone{opacity:0;pointer-events:none}
 #pc{position:absolute;inset:0;width:100%;height:100%;transition:opacity 2.2s ease}
 #pc.off{opacity:0}
-#spBrain{position:relative;width:min(68vw,280px);opacity:0;transition:opacity 2.2s ease;margin-top:-40px}
+#spBrain{position:relative;width:min(60vw,250px);opacity:0;transition:opacity 2.2s ease;margin-top:-30px}
 #spBrain.on{opacity:1}
 #spBrain.float{animation:float 6.5s ease-in-out infinite}
 #spBrain svg{width:100%;height:auto;display:block;filter:drop-shadow(0 18px 22px rgba(238,138,163,.25))}
 .sp-title{position:relative;text-align:center;opacity:0;transition:opacity 1.6s ease;margin-top:30px;padding:0 30px}
 .sp-title h1{margin:0 0 8px;font-weight:300;font-size:13px;letter-spacing:.34em;text-transform:uppercase}
 .sp-title p{margin:0;font-size:14px;color:var(--mute);line-height:1.6}
-.sp-btn{position:relative;margin-top:34px;height:48px;padding:0 44px;border-radius:24px;background:var(--ink);color:var(--bg);font-size:15px;opacity:0;pointer-events:none;transition:opacity 1.6s ease,transform .3s}
+.sp-intro{position:relative;text-align:center;margin-top:26px;padding:0 34px;max-width:430px}
+.sp-intro p{margin:0 0 12px;font-size:18px;line-height:1.45;font-weight:300;opacity:0;transform:translateY(6px);transition:opacity 1.4s ease,transform 1.4s ease}
+.sp-intro p:first-child{font-size:24px;margin-bottom:14px}
+.sp-intro p.on{opacity:1;transform:none}
+.sp-btn{position:relative;margin-top:26px;height:48px;padding:0 44px;border-radius:24px;background:var(--ink);color:var(--bg);font-size:15px;opacity:0;pointer-events:none;transition:opacity 1.6s ease,transform .3s}
 .sp-title.on,.sp-btn.on{opacity:1}.sp-btn.on{pointer-events:auto}
 .sp-btn:active{transform:scale(.97)}
 #spLang{position:absolute;top:18px;inset-inline-end:20px;width:auto;padding:0 14px;border-radius:17px;font-size:13px;color:var(--mute);z-index:2}
@@ -209,7 +244,7 @@ textarea:focus{border-color:var(--mute)}
 .tfoot .dots{gap:6px}
 .tfoot .btn{width:auto;height:40px;padding:0 26px;font-size:14px}
 .tfoot .lnk{padding:8px 0}
-@media (prefers-reduced-motion:reduce){#brainBtn .float,.shadow,#hint,#spBrain.float,#hole{animation:none}}
+@media (prefers-reduced-motion:reduce){#brainBtn .float,.shadow,#hint,#spBrain.float,#hole,#gate .gb{animation:none}}
 </style>
 </head>
 <body data-view="home">
@@ -229,9 +264,10 @@ textarea:focus{border-color:var(--mute)}
   <section id="map">
     <div id="insight"></div>
     <svg id="mapSvg" viewBox="-195 -300 390 600" preserveAspectRatio="xMidYMid meet">
-      <g id="mapGroup"><g id="ghost"></g><g id="ring"></g><g id="edges"></g><g id="nodes"></g></g>
+      <g id="zoomG"><g id="mapGroup"><g id="ghost"></g><g id="ring"></g><g id="edges"></g><g id="nodes"></g></g></g>
     </svg>
   </section>
+  <div id="veil"></div>
 
   <div id="bottom">
     <button class="pill" id="addBtn"><span data-i="addThought"></span></button>
@@ -249,7 +285,6 @@ textarea:focus{border-color:var(--mute)}
   <div class="sheet" id="todaySheet"></div>
   <div class="sheet" id="reviewSheet"></div>
   <div class="sheet" id="msgSheet"></div>
-  <div class="sheet" id="aboutSheet"></div>
   <div class="sheet" id="catchSheet">
     <div class="grab"></div>
     <div class="tag" data-i="catcherTag"></div>
@@ -271,8 +306,17 @@ textarea:focus{border-color:var(--mute)}
     <button class="rb" id="spLang"></button>
     <div id="spBrain"></div>
     <div class="sp-title" id="spTitle"><h1 data-i="brand"></h1><p data-i="tagline"></p></div>
+    <div class="sp-intro" id="spIntro"></div>
     <button class="sp-btn" id="spBtn"></button>
     <div id="spVer"></div>
+  </section>
+
+  <section id="gate">
+    <div class="gb" id="gateBrain"></div>
+    <h1>Project: Brain</h1>
+    <p>Choose your language · اختر لغتك</p>
+    <button class="gbtn" data-l="en">English</button>
+    <button class="gbtn" data-l="ar">العربية</button>
   </section>
 
   <div id="toast" role="status" aria-live="polite"></div>
@@ -280,10 +324,10 @@ textarea:focus{border-color:var(--mute)}
 </div>
 
 <script>
-/* ============ Project: Brain v1.0.0 — single file, no network calls ============ */
-const VERSION='1.0.0';
+/* ============ Project: Brain v1.1.0 — single file, no network calls ============ */
+const VERSION='1.1.0';
 const KEY='projectBrain.state';
-const DEV_EMAIL=''; // set an address here to enable "send by email" in Message the developer
+const DEV_EMAIL='hello.verseapps@gmail.com'; // "Message the developer" opens the user's email app to this address
 
 const $=s=>document.querySelector(s);
 const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
@@ -293,6 +337,8 @@ const hash=s=>{let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul
 const rnd=(id,k)=>hash(id+k);
 const mem={};
 const store={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return mem[k]??null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){mem[k]=v}},del(k){try{localStorage.removeItem(k)}catch(e){delete mem[k]}}};
+/* open the app with ?reset to start as a brand-new user */
+if(/[?&]reset(?:[=&]|$)/.test(location.search)){['projectBrain.state','projectBrain.lang','projectBrain.langSet'].forEach(k=>store.del(k));try{history.replaceState(null,'',location.pathname)}catch(e){}}
 const dayKey=()=>new Date().toLocaleDateString('en-CA');
 const fmt=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:1});
 const D=864e5;
@@ -311,9 +357,10 @@ const OUT=[[22,92],[13,72],[20,48],[40,28],[68,15],[100,10],[134,14],[162,28],[1
 function sample(pts,seg){const out=[],n=pts.length;for(let i=0;i<n;i++){const a=pts[(i-1+n)%n],b=pts[i],c=pts[(i+1)%n],d=pts[(i+2)%n];
   for(let t=0;t<seg;t++){const u=t/seg,u2=u*u,u3=u2*u;const f=k=>.5*(2*b[k]+(-a[k]+c[k])*u+(2*a[k]-5*b[k]+4*c[k]-d[k])*u2+(-a[k]+3*b[k]-3*c[k]+d[k])*u3);out.push([f(0),f(1)])}}return out}
 function brainOutline(){const cx=100,cy=72;return sample(OUT,5).filter((_,i)=>i%2===0).map(([x,y])=>{const a=Math.atan2(y-cy,x-cx),k=1+.028*Math.sin(a*9+1)+.02*Math.sin(a*15+2);return [cx+(x-cx)*k,cy+(y-cy)*k]})}
-function brainSVG(ghost){
-  const id='b'+(++bid),body=bez(brainOutline(),true);
-  const cer=bez(sample([[128,112],[140,106],[160,106],[176,112],[172,124],[154,130],[136,126]],4).filter((_,i)=>i%2===0),true);
+const CERP=()=>bez(sample([[128,112],[140,106],[160,106],[176,112],[172,124],[154,130],[136,126]],4).filter((_,i)=>i%2===0),true);
+let _body=null,_cer=null;const BODY=()=>_body||(_body=bez(brainOutline(),true)),CER=()=>_cer||(_cer=CERP());
+function brainSVG(ghost,shine){
+  const id='b'+(++bid),body=BODY(),cer=CER();
   const R=prng(11);let folds='';
   for(let k=0;k<38;k++){let x=20+R()*165,y=12+R()*108,a=R()*6.28;const pts=[[x,y]],sg=4+Math.floor(R()*4);
     for(let q=0;q<sg;q++){a+=(R()-.5)*2.5;const l=8+R()*9;x+=Math.cos(a)*l;y+=Math.sin(a)*l;pts.push([x,y])}folds+=`<path d="${bez(pts,false)}"/>`}
@@ -322,13 +369,16 @@ function brainSVG(ghost){
   if(ghost)return `<svg viewBox="0 0 200 160"><defs><clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
    <path d="${body}" fill="none" stroke="#E7A0B4" stroke-width="1.1"/>
    <g clip-path="url(#${id}c)" fill="none" stroke="#E7A0B4" stroke-width=".7" stroke-linecap="round" opacity=".3">${folds}${syl.replace(/stroke-width="[\d.]+"/g,'stroke-width="1"')}</g></svg>`;
+  const sh=shine?`<radialGradient id="${id}s" cx=".35" cy=".28" r=".65"><stop offset="0" stop-color="#fff" stop-opacity=".62"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+   <linearGradient id="${id}d" x1="0" y1=".45" x2="0" y2="1"><stop offset="0" stop-color="#7a1f3a" stop-opacity="0"/><stop offset="1" stop-color="#7a1f3a" stop-opacity=".2"/></linearGradient>`:'';
+  const shp=shine?`<path d="${body}" fill="url(#${id}d)"/><path d="${body}" fill="url(#${id}s)"/>`:'';
   return `<svg viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg">
   <defs><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F9C2CE"/><stop offset="1" stop-color="#EC859F"/></linearGradient>
-  <linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EE90A8"/><stop offset="1" stop-color="#DC6A8A"/></linearGradient>
+  <linearGradient id="${id}h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EE90A8"/><stop offset="1" stop-color="#DC6A8A"/></linearGradient>${sh}
   <clipPath id="${id}c"><path d="${body}"/></clipPath></defs>
   <path d="M109,118 L124,118 L128,150 Q118,157 108,150 Z" fill="url(#${id}h)" stroke="${col}" stroke-width="1.8" stroke-linejoin="round"/>
   <path d="${cer}" fill="url(#${id}h)" stroke="${col}" stroke-width="1.8"/>
-  <path d="${body}" fill="url(#${id}g)"/>
+  <path d="${body}" fill="url(#${id}g)"/>${shp}
   <g clip-path="url(#${id}c)" fill="none" stroke="${col}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity=".5">${folds}</g>
   <g clip-path="url(#${id}c)" fill="none" stroke="${col}" stroke-linecap="round" opacity=".9">${syl}</g>
   <path d="${body}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/>
@@ -337,19 +387,21 @@ function brainSVG(ghost){
 /* ---------- language ---------- */
 const I={en:{
  brand:'Project: Brain',tagline:'Untangle your mind, one small move at a time.',begin:'Begin',next:'Continue',skip:'Skip',hint:'Tap your brain',back:'Brain',calm:'Calm',addThought:'+ Thought',today:'Today',
+ introL:['You are your brain.','And you deserve to know how to work with it.','Project: Brain walks you through it, one small move at a time.'],
  inFocus:'In focus',parkedTag:'Parked',settledTag:'Settled',todayMove:"Today's move",firstMove:"First move when you're ready",twoMin:'Takes about 2 minutes',
  done:'Done, I did it',park:'Park',focus:'Bring into focus',leansOn:'Leans on',unlocks:'Unlocks',
  allSet:'All moves done',allSetSub:'Keep logging your number. That is what finishes this one.',
  logToday:'Log today',save:'Save',cancel:'Cancel',target:'Target',now:'Number now',trackNumber:'Track a number',edit:'Edit',unit:'Unit',label:'What are you measuring?',start:'Starting number',
  madeSmaller:'Made smaller',shrinkNote:"A few days passed. Here's the tiny version.",fullDone:'I did the full step',touchToast:'Good. That counts.',shrinkGeneric:x=>`Just 2 minutes on: ${x}`,
- del:'Delete goal',delConfirm:'Tap again to delete',
+ del:'Delete goal',delConfirm:'Tap again to delete',closeLbl:'Close',
  yourMoves:'Your moves today',nothingLeft:'Nothing left. Rest.',todayHelp:'Tap each one as you do it. 30 seconds tonight is the whole habit.',calmAt:c=>`Calm is at ${c}%. Come back tomorrow, the map will be here.`,
+ pickTitle:'What matters most right now?',pickSub:"Pick up to 3. Today's moves come from these. The rest wait, nothing is lost.",pickSet:'Set my focus',pickChange:'Change my priorities',pickEmptyT:'Your brain is empty so far',pickEmptyS:"Add a thought first, then pick what matters and today's moves will show up here.",
  catcherTag:'Thought catcher',whatsOnMind:"What's on your mind?",dumpPh:'Dump everything. One per line, or just talk.',place:'Place it',listening:'Listening…',noVoice:"Voice isn't available in this browser",
  placedToast:(n,c)=>`${n} thought${n>1?'s':''} placed · parked (${c}/3 in focus)`,
- profile:'Profile',namePh:'Your name',moves:'Moves',activeDays:'Active days',badges:'Badges',patterns:'Patterns',noPatterns:'A few more moves and your patterns will show up here.',
- weeklyReview:'Weekly review',mindReplay:'Mind replay',shareApp:'Share the app',backup:'Back up my data',restore:'Restore from backup',language:'Language',msgDev:'Message the developer',replayTour:'Replay the tutorial',about:'About',
- msgPh:'Tell me what is broken, missing, or great.',send:'Send',msgSaved:'Saved (not sent yet in this version)',
- aboutVer:v=>`Version ${v}`,aboutPriv:"Your data stays on this device, in this browser. Back it up from your profile. Voice input uses your browser's speech service.",aboutMed:"Project: Brain is a personal organization tool. It isn't medical or mental-health care.",resetBrain:'Reset my brain',resetConfirm:'Tap again to erase everything',
+ profile:'Profile',tab_me:'Me',tab_settings:'Settings',tab_about:'About',avatarT:'Your symbol',namePh:'Your name',moves:'Moves',activeDays:'Active days',badges:'Badges',patterns:'Patterns',noPatterns:'A few more moves and your patterns will show up here.',
+ weeklyReview:'Weekly review',mindReplay:'Mind replay',shareApp:'Share the app',backup:'Back up my data',restore:'Restore from backup',language:'Language',msgDev:'Message the developer',replayTour:'Replay the tutorial',about:'About',moreSoon:'More settings are coming soon.',
+ msgPh:'Tell me what is broken, missing, or great.',send:'Send',msgSaved:'Saved on this device',msgSent:'Opening your email app…',
+ aboutVer:v=>`Version ${v}`,aboutPriv:"Your data stays on this device, in this browser. Back it up from the Me tab. Voice input uses your browser's speech service.",aboutMed:"Project: Brain is a personal organization tool. It isn't medical or mental-health care.",aboutFb:'Feedback and ideas',resetBrain:'Reset my brain',resetConfirm:'Tap again to erase everything',
  rvTitle:'Your week, honestly',rvMoves:'Moves',rvGoals:'Goals',rvCalm:'Calm',rvAvoid:(t,d)=>`${t} hasn't had a move in ${d} days.`,rvTry:x=>`Make it smaller: just "${x}", 2 minutes. Or park it, no guilt.`,rvKeep:'Keep it',rvPark:'Park it',rvNext:t=>`Next week's lead: ${t}.`,rvEmpty:'Nothing to review yet. Do a few moves and come back.',
  day:n=>`Day ${n}`,share:'Share',close:'Close',rpShare:(a,b,d)=>`My head went from ${a}% to ${b}% calm in ${d} days. Project: Brain`,
  settled:'Brain settled',parkedToast:'Parked. Not deleted.',focusFull:'Focus is full (3). Park one first.',copied:'Link copied',badgeNew:'Badge earned',backupDone:'Backup downloaded',restored:'Restored',badFile:"That isn't a Project: Brain backup",goalSettled:t=>`${t} is settled. A slot just opened.`,
@@ -364,22 +416,24 @@ const I={en:{
  obChips:['Buy a car','Lose weight','Start creating content','Make more money','Learn something new','Get married','Buy a laptop','Travel somewhere'],
  obFocusT:'Which 3 matter most right now?',obFocusS:'The rest get parked, not deleted.',obAi:'AI pick',obMax:'Three is the limit. Swap one out.',
  obBuildT:'Building your brain…',obResultT:c=>`Your brain starts at ${c}% calm.`,obResultS:'Every small move you finish untangles it.',obStart:'Show me around',
- tour:[{t:'This is your mind.',b:"Every dot is something you want. It's messy on purpose. That's where everyone starts."},{t:'Tap a dot.',b:'You get one tiny move for today and a way to track the goal. Parked dots wait quietly.'},{t:'This is Calm.',b:'Every move you finish untangles the map and raises it. Miss a day? It never resets.'},{t:'Today, every evening.',b:'Tap here and check off what you did. Thirty seconds is the whole habit.'},{t:'Catch random thoughts.',b:'Type it or say it. It gets placed for you and parked until you choose it.'},{t:'Your profile.',b:'Badges, weekly review, mind replay, backup and language live here.'},{t:"That's it.",b:'Start with one move today. Small is the point.'}],tourNext:'Next',tourGo:"Let's go"},
+ tour:[{t:'This is your mind.',b:"Every dot is something you want. It's messy on purpose. Drag any dot around, it floats back by itself."},{t:'Tap a dot.',b:'It zooms in and shows one tiny move for today, plus a way to track the goal.'},{t:'This is Calm.',b:'Every move you finish untangles the map and raises it. Miss a day? It never resets.'},{t:'Today, every day.',b:'Open Today to see what to do. It follows the goals you picked as priorities. Thirty seconds is the whole habit.'},{t:'Catch random thoughts.',b:'Type it or say it. It gets placed for you and parked until you choose it.'},{t:'Your profile.',b:'Me, Settings and About live here. Pick your symbol, review your week, back up your data.'},{t:"That's it.",b:'Start with one move today. Small is the point.'}],tourNext:'Next',tourGo:"Let's go"},
 ar:{
  brand:'مشروع: الدماغ',tagline:'رتّب ذهنك، بخطوة صغيرة كل مرة.',begin:'ابدأ',next:'متابعة',skip:'تخطَّ',hint:'اضغط على دماغك',back:'الدماغ',calm:'الهدوء',addThought:'+ فكرة',today:'اليوم',
+ introL:['أنت دماغك.','ومن حقك أن تعرف كيف تتعامل معه.','«مشروع: الدماغ» يرافقك في ذلك، خطوة صغيرة كل مرة.'],
  inFocus:'قيد التركيز',parkedTag:'مؤجّل',settledTag:'مكتمل',todayMove:'خطوة اليوم',firstMove:'أول خطوة عندما تكون جاهزاً',twoMin:'تستغرق دقيقتين تقريباً',
  done:'تم، أنجزتها',park:'أجّل',focus:'ركّز عليه',leansOn:'يعتمد على',unlocks:'يفتح',
  allSet:'أنجزت كل الخطوات',allSetSub:'واصل تسجيل رقمك. هذا ما يُنهي هذا الهدف.',
  logToday:'سجّل اليوم',save:'حفظ',cancel:'إلغاء',target:'الهدف',now:'الرقم الآن',trackNumber:'تتبّع رقماً',edit:'تعديل',unit:'الوحدة',label:'ماذا تقيس؟',start:'رقم البداية',
  madeSmaller:'تم تصغيرها',shrinkNote:'مرّت بضعة أيام. هذه النسخة الصغيرة.',fullDone:'أنجزت الخطوة كاملة',touchToast:'أحسنت. هذا يُحسب.',shrinkGeneric:x=>`دقيقتان فقط على: ${x}`,
- del:'احذف الهدف',delConfirm:'اضغط مرة أخرى للحذف',
+ del:'احذف الهدف',delConfirm:'اضغط مرة أخرى للحذف',closeLbl:'إغلاق',
  yourMoves:'خطواتك اليوم',nothingLeft:'لا شيء متبقٍ. ارتح.',todayHelp:'اضغط على كل خطوة عند إنجازها. 30 ثانية الليلة هي العادة كلها.',calmAt:c=>`الهدوء عند ${c}%. عُد غداً، الخريطة بانتظارك.`,
+ pickTitle:'ما الأهم الآن؟',pickSub:'اختر حتى 3 أهداف. خطوات اليوم تأتي منها. والباقي ينتظر، ولا شيء يضيع.',pickSet:'ثبّت تركيزي',pickChange:'غيّر أولوياتي',pickEmptyT:'دماغك فارغ حتى الآن',pickEmptyS:'أضف فكرة أولاً، ثم اختر ما يهمك لتظهر خطوات اليوم هنا.',
  catcherTag:'صائد الأفكار',whatsOnMind:'ما الذي يشغل بالك؟',dumpPh:'أفرغ كل شيء. فكرة في كل سطر، أو تحدّث فقط.',place:'ضعها في مكانها',listening:'أستمع…',noVoice:'الصوت غير متاح في هذا المتصفح',
  placedToast:(n,c)=>`تم وضع ${n} ${n>2&&n<11?'أفكار':'فكرة'} · مؤجّلة (${c}/3 قيد التركيز)`,
- profile:'الملف الشخصي',namePh:'اسمك',moves:'الخطوات',activeDays:'أيام النشاط',badges:'الشارات',patterns:'الأنماط',noPatterns:'بعد بضع خطوات أخرى ستظهر أنماطك هنا.',
- weeklyReview:'المراجعة الأسبوعية',mindReplay:'إعادة عرض العقل',shareApp:'شارك التطبيق',backup:'نسخ بياناتي احتياطياً',restore:'استعادة من نسخة احتياطية',language:'اللغة',msgDev:'راسل المطوّر',replayTour:'أعد عرض الشرح',about:'حول التطبيق',
- msgPh:'أخبرني ما المعطّل أو الناقص أو الرائع.',send:'إرسال',msgSaved:'تم الحفظ (لا يُرسل بعد في هذا الإصدار)',
- aboutVer:v=>`الإصدار ${v}`,aboutPriv:'بياناتك تبقى على هذا الجهاز وفي هذا المتصفح. انسخها احتياطياً من ملفك الشخصي. الإدخال الصوتي يستخدم خدمة الكلام في متصفحك.',aboutMed:'مشروع: الدماغ أداة تنظيم شخصية، وليست رعاية طبية أو نفسية.',resetBrain:'إعادة ضبط دماغي',resetConfirm:'اضغط مرة أخرى لمسح كل شيء',
+ profile:'الملف الشخصي',tab_me:'أنا',tab_settings:'الإعدادات',tab_about:'حول',avatarT:'رمزك',namePh:'اسمك',moves:'الخطوات',activeDays:'أيام النشاط',badges:'الشارات',patterns:'الأنماط',noPatterns:'بعد بضع خطوات أخرى ستظهر أنماطك هنا.',
+ weeklyReview:'المراجعة الأسبوعية',mindReplay:'إعادة عرض العقل',shareApp:'شارك التطبيق',backup:'نسخ بياناتي احتياطياً',restore:'استعادة من نسخة احتياطية',language:'اللغة',msgDev:'راسل المطوّر',replayTour:'أعد عرض الشرح',about:'حول التطبيق',moreSoon:'المزيد من الإعدادات قريباً.',
+ msgPh:'أخبرني ما المعطّل أو الناقص أو الرائع.',send:'إرسال',msgSaved:'تم الحفظ على هذا الجهاز',msgSent:'نفتح تطبيق البريد…',
+ aboutVer:v=>`الإصدار ${v}`,aboutPriv:'بياناتك تبقى على هذا الجهاز وفي هذا المتصفح. انسخها احتياطياً من تبويب «أنا». الإدخال الصوتي يستخدم خدمة الكلام في متصفحك.',aboutMed:'مشروع: الدماغ أداة تنظيم شخصية، وليست رعاية طبية أو نفسية.',aboutFb:'للملاحظات والاقتراحات',resetBrain:'إعادة ضبط دماغي',resetConfirm:'اضغط مرة أخرى لمسح كل شيء',
  rvTitle:'أسبوعك بصراحة',rvMoves:'الخطوات',rvGoals:'أهداف',rvCalm:'الهدوء',rvAvoid:(t,d)=>`لم تتخذ أي خطوة في ${t} منذ ${d} أيام.`,rvTry:x=>`اجعلها أصغر: فقط «${x}»، دقيقتان. أو أجّلها دون شعور بالذنب.`,rvKeep:'أبقِه',rvPark:'أجّله',rvNext:t=>`محور الأسبوع القادم: ${t}.`,rvEmpty:'لا شيء لمراجعته بعد. أنجز بعض الخطوات ثم عُد.',
  day:n=>`اليوم ${n}`,share:'مشاركة',close:'إغلاق',rpShare:(a,b,d)=>`انتقل هدوء ذهني من ${a}% إلى ${b}% خلال ${d} أيام. مشروع: الدماغ`,
  settled:'استقر دماغك',parkedToast:'تم التأجيل. لم يُحذف.',focusFull:'التركيز ممتلئ (3). أجّل هدفاً أولاً.',copied:'تم نسخ الرابط',badgeNew:'شارة جديدة',backupDone:'تم تنزيل النسخة الاحتياطية',restored:'تمت الاستعادة',badFile:'هذا الملف ليس نسخة احتياطية من التطبيق',goalSettled:t=>`اكتمل ${t}. فُتح مكان جديد.`,
@@ -394,7 +448,7 @@ ar:{
  obChips:['اشترِ سيارة','انقص وزنك','ابدأ بصناعة المحتوى','اكسب مالاً أكثر','تعلّم شيئاً جديداً','تزوّج','اشترِ لابتوب','سافر إلى مكان ما'],
  obFocusT:'ما الثلاثة الأهم الآن؟',obFocusS:'الباقي يُؤجَّل وليس يُحذف.',obAi:'اقتراح',obMax:'الحد ثلاثة. بدّل واحداً.',
  obBuildT:'نبني دماغك…',obResultT:c=>`يبدأ دماغك عند هدوء ${c}%.`,obResultS:'كل خطوة صغيرة تنجزها تُفكّ تشابكه.',obStart:'أرني كيف يعمل',
- tour:[{t:'هذا عقلك.',b:'كل نقطة هي شيء تريده. الفوضى مقصودة. من هنا يبدأ الجميع.'},{t:'اضغط على نقطة.',b:'تحصل على خطوة صغيرة لليوم وطريقة لتتبّع الهدف. النقاط المؤجّلة تنتظر بهدوء.'},{t:'هذا هو الهدوء.',b:'كل خطوة تنجزها تفكّ تشابك الخريطة وترفع هذا الرقم. فاتك يوم؟ لا شيء يعود إلى الصفر.'},{t:'اليوم، كل مساء.',b:'اضغط هنا وعلّم ما أنجزته. ثلاثون ثانية هي العادة كلها.'},{t:'التقط الأفكار العشوائية.',b:'اكتبها أو قلها. تُوضع في مكانها وتُؤجَّل حتى تختارها.'},{t:'ملفك الشخصي.',b:'الشارات والمراجعة الأسبوعية وإعادة عرض العقل والنسخ الاحتياطي واللغة هنا.'},{t:'هذا كل شيء.',b:'ابدأ بخطوة واحدة اليوم. الصغير هو المقصود.'}],tourNext:'التالي',tourGo:'هيا بنا'}};
+ tour:[{t:'هذا عقلك.',b:'كل نقطة هي شيء تريده. الفوضى مقصودة. اسحب أي نقطة وحرّكها، وستعود إلى مكانها وحدها.'},{t:'اضغط على نقطة.',b:'تقترب منك وتُظهر خطوة صغيرة لليوم، وطريقة لتتبّع الهدف.'},{t:'هذا هو الهدوء.',b:'كل خطوة تنجزها تفكّ تشابك الخريطة وترفع هذا الرقم. فاتك يوم؟ لا شيء يعود إلى الصفر.'},{t:'اليوم، كل يوم.',b:'افتح «اليوم» لترى ما عليك فعله. يتبع الأهداف التي اخترتها كأولويات. ثلاثون ثانية هي العادة كلها.'},{t:'التقط الأفكار العشوائية.',b:'اكتبها أو قلها. تُوضع في مكانها وتُؤجَّل حتى تختارها.'},{t:'ملفك الشخصي.',b:'«أنا» و«الإعدادات» و«حول» هنا. اختر رمزك، وراجع أسبوعك، وانسخ بياناتك احتياطياً.'},{t:'هذا كل شيء.',b:'ابدأ بخطوة واحدة اليوم. الصغير هو المقصود.'}],tourNext:'التالي',tourGo:'هيا بنا'}};
 let lang=store.get('projectBrain.lang')||((navigator.language||'').startsWith('ar')?'ar':'en');
 const T=(k,...a)=>{const v=I[lang][k]!==undefined?I[lang][k]:I.en[k];return typeof v==='function'?v(...a):v};
 const isAr=()=>lang==='ar';
@@ -406,52 +460,52 @@ const st=(p,en,arb,me,ma)=>[p,en,arb,me,ma];
 const PB={
  creator:{cl:'create',ph:[{en:'Clarity',ar:'الوضوح'},{en:'First content',ar:'أول محتوى'},{en:'Rhythm',ar:'الإيقاع'},{en:'Grow',ar:'النمو'}],
   metric:{label:{en:'Videos posted',ar:'فيديوهات منشورة'},unit:{en:'',ar:''},start:0,target:12},note:{en:'Pick one platform. Two is how this one dies.',ar:'اختر منصة واحدة. اثنتان هما سبب موت هذا الهدف.'},
-  steps:[st(0,'Write 3 topics you could talk about for hours','اكتب 3 مواضيع تستطيع الحديث عنها لساعات','Write just one topic','اكتب موضوعاً واحداً فقط'),
-   st(0,'Write one sentence: who is this for?','اكتب جملة واحدة: لمن هذا المحتوى؟','Write who it is for in 3 words','اكتب الفئة المستهدفة في 3 كلمات'),
-   st(0,'Pick ONE platform to start on','اختر منصة واحدة فقط للبداية','Pick the platform you open most','اختر المنصة التي تفتحها أكثر'),
-   st(0,"Save 3 creators in your space and note what you'd do differently",'احفظ 3 صنّاع محتوى في مجالك ودوّن ما ستفعله بشكل مختلف','Save just one creator','احفظ صانع محتوى واحداً فقط'),
-   st(1,"Film one 30-second test clip (don't post it)",'صوّر مقطعاً تجريبياً مدته 30 ثانية (دون نشره)','Film 5 seconds of anything','صوّر 5 ثوانٍ من أي شيء'),
-   st(1,'Watch it back and note one thing to fix','شاهده ودوّن شيئاً واحداً لتحسينه','Watch the first 5 seconds','شاهد أول 5 ثوانٍ فقط'),
-   st(1,'Set up the profile: name, bio, photo','جهّز الحساب: الاسم والنبذة والصورة','Choose the profile photo','اختر صورة الحساب فقط'),
-   st(1,'Post video #1. Ugly is fine.','انشر الفيديو الأول. لا بأس أن يكون غير مثالي.','Write a caption for your best clip','اكتب وصفاً لأفضل مقطع لديك'),
-   st(2,'Choose 2 posting days and block them in your calendar','اختر يومين للنشر واحجزهما في تقويمك','Pick just one posting day','اختر يوم نشر واحداً فقط'),
-   st(2,'Script 3 videos in one sitting','اكتب سيناريو 3 فيديوهات في جلسة واحدة','Write just the hook for video 1','اكتب افتتاحية الفيديو الأول فقط'),
-   st(2,'Film all 3 in one session, then post one per day','صوّر الثلاثة في جلسة واحدة، ثم انشر واحداً كل يوم','Film just video 1','صوّر الفيديو الأول فقط'),
-   st(3,'Find your best post and make 2 more like it','اعرف أفضل منشور لك وأنتج اثنين مثله','Just find your best post','اعرف أفضل منشور لك فقط'),
-   st(3,'Review: keep, change, or drop the platform','راجع: هل تُبقي المنصة أم تغيّرها أم تتركها','Write one thing you like about it','اكتب شيئاً واحداً يعجبك فيها')]},
+  steps:[st(0,'Write down 3 topics you could talk about for hours (e.g. cars, music, fitness)','اكتب 3 مواضيع تستطيع الحديث عنها لساعات (مثل السيارات أو الموسيقى أو اللياقة)','Write just one topic','اكتب موضوعاً واحداً فقط'),
+   st(0,'Finish this sentence: "My content helps ___ to ___"','أكمل الجملة: «محتواي يساعد ___ على ___»','Write who it helps, in 3 words','اكتب من تساعده في 3 كلمات'),
+   st(0,'Choose ONE platform to start on (Instagram, TikTok or YouTube)','اختر منصة واحدة فقط للبداية (إنستغرام أو تيك توك أو يوتيوب)','Pick the app you open most','اختر التطبيق الذي تفتحه أكثر'),
+   st(0,'Follow 3 creators in your topic. Write one thing you would do differently from each','تابع 3 صنّاع محتوى في مجالك. اكتب شيئاً واحداً ستفعله بشكل مختلف عن كل منهم','Follow just one creator','تابع صانع محتوى واحداً فقط'),
+   st(1,"Film a 30-second test video. Don't post it",'صوّر فيديو تجريبياً مدته 30 ثانية. لا تنشره','Film 5 seconds of anything','صوّر 5 ثوانٍ من أي شيء'),
+   st(1,'Watch it back and write down one thing to improve (sound, light or length)','شاهده ودوّن شيئاً واحداً لتحسينه (الصوت أو الإضاءة أو المدة)','Watch the first 5 seconds','شاهد أول 5 ثوانٍ فقط'),
+   st(1,'Set up your profile: name, a short bio and a profile photo','جهّز حسابك: الاسم ونبذة قصيرة وصورة شخصية','Choose the profile photo','اختر الصورة الشخصية فقط'),
+   st(1,'Post your first video. It does not need to be perfect','انشر أول فيديو. لا يجب أن يكون مثالياً','Write a caption for your best clip','اكتب وصفاً لأفضل مقطع لديك'),
+   st(2,'Choose 2 days a week for posting and add them to your calendar','اختر يومين في الأسبوع للنشر وأضفهما إلى تقويمك','Pick just one posting day','اختر يوم نشر واحداً فقط'),
+   st(2,'Write scripts for 3 videos in one sitting (a hook, the point, an ending)','اكتب سيناريو 3 فيديوهات في جلسة واحدة (افتتاحية، الفكرة، خاتمة)','Write only the first line of video 1','اكتب أول جملة في الفيديو الأول فقط'),
+   st(2,'Film all 3 videos in one session, then post one each day','صوّر الفيديوهات الثلاثة في جلسة واحدة، ثم انشر واحداً كل يوم','Film just video 1','صوّر الفيديو الأول فقط'),
+   st(3,'Open your stats, find your best post and make 2 more like it','افتح الإحصائيات، واعرف أفضل منشور لك، وأنتج اثنين مثله','Just find your best post','اعرف أفضل منشور لك فقط'),
+   st(3,'After 4 weeks, decide: keep this platform, change your style, or switch','بعد 4 أسابيع قرّر: تبقى على المنصة أم تغيّر أسلوبك أم تنتقل لمنصة أخرى','Write one thing you like about it','اكتب شيئاً واحداً يعجبك فيها')]},
  weight:{cl:'body',ph:[{en:'Baseline',ar:'نقطة البداية'},{en:'Habits',ar:'العادات'},{en:'Momentum',ar:'الزخم'}],
   sug:{label:{en:'Weight',ar:'الوزن'},unit:{en:'kg',ar:'كغ'}},note:{en:'Small and daily beats big and Monday.',ar:'الصغير اليومي أفضل من الكبير الذي يبدأ يوم الاثنين.'},
-  steps:[st(0,'Weigh in and write the number down','قِس وزنك ودوّن الرقم','Stand on the scale, nothing else','قف على الميزان فقط'),
-   st(0,'Write your target and a rough date','اكتب هدفك وموعداً تقريبياً','Write just the target number','اكتب رقم الهدف فقط'),
-   st(0,'Photograph your usual meals for 2 days','صوّر وجباتك المعتادة ليومين','Photograph one meal','صوّر وجبة واحدة'),
-   st(1,'Set one daily steps target','حدّد هدف خطوات يومياً','Check your steps today','اطّلع على خطواتك اليوم'),
-   st(1,"Plan tomorrow's lunch tonight",'خطّط لغداء الغد الليلة','Decide just the protein','اختر مصدر البروتين فقط'),
-   st(1,'Pick 3 workout slots this week','اختر 3 مواعيد للتمرين هذا الأسبوع','Pick one slot','اختر موعداً واحداً'),
-   st(2,'Walk or train for 15 minutes','امشِ أو تمرّن لمدة 15 دقيقة','Walk for 5 minutes','امشِ 5 دقائق'),
-   st(2,'Weigh in again and compare','قِس وزنك مجدداً وقارن','Just weigh in','قِس وزنك فقط'),
-   st(2,"Keep what worked, drop what didn't",'أبقِ ما نجح واترك ما لم ينجح','Name one thing that worked','اذكر شيئاً واحداً نجح')]},
+  steps:[st(0,'Step on the scale and write down your weight today','قِس وزنك اليوم ودوّن الرقم','Just step on the scale','قف على الميزان فقط'),
+   st(0,'Write your target weight and the date you want to reach it','اكتب وزنك المستهدف والتاريخ الذي تريد الوصول فيه إليه','Write only the target number','اكتب رقم الهدف فقط'),
+   st(0,'Take a photo of everything you eat for 2 days (change nothing yet)','صوّر كل ما تأكله ليومين (دون تغيير أي شيء الآن)','Photograph one meal','صوّر وجبة واحدة'),
+   st(1,'Set a daily steps goal (start with what you walk now + 1,000)','حدّد هدفاً يومياً للخطوات (ابدأ بما تمشيه الآن + 1000)','Check how many steps you walked today','اطّلع على خطواتك اليوم'),
+   st(1,'Decide tonight what you will eat for lunch tomorrow','قرّر الليلة ماذا ستأكل غداً في الغداء','Just choose the protein','اختر مصدر البروتين فقط'),
+   st(1,'Pick 3 times this week for a workout and add them to your calendar','اختر 3 مواعيد هذا الأسبوع للتمرين وأضفها إلى تقويمك','Pick one time','اختر موعداً واحداً'),
+   st(2,'Do 15 minutes of walking or a workout today','امشِ أو تمرّن لمدة 15 دقيقة اليوم','Walk for 5 minutes','امشِ 5 دقائق'),
+   st(2,'Weigh yourself again and compare with day one','قِس وزنك مجدداً وقارنه بالبداية','Just weigh yourself','قِس وزنك فقط'),
+   st(2,'Write what worked and what did not. Keep the first, drop the second','اكتب ما نجح وما لم ينجح. أبقِ الأول واترك الثاني','Write one thing that worked','اكتب شيئاً واحداً نجح')]},
  money:{cl:'money',ph:[{en:'Map it',ar:'ارسم الصورة'},{en:'Test it',ar:'جرّب'},{en:'Scale it',ar:'وسّع'}],
   sug:{label:{en:'Monthly side income',ar:'دخل إضافي شهري'},unit:{en:'AED',ar:'د.إ'}},
-  steps:[st(0,'List every income source you have today','اكتب كل مصادر دخلك الحالية','Write your main income only','اكتب دخلك الأساسي فقط'),
-   st(0,'Write your monthly target in AED','اكتب هدفك الشهري بالدرهم','Write one number','اكتب رقماً واحداً'),
-   st(0,'List 3 skills people would pay you for','اكتب 3 مهارات يدفع الناس مقابلها','List one skill','اكتب مهارة واحدة'),
-   st(1,'Pick one side-income idea to test','اختر فكرة دخل إضافي واحدة لتجربتها','Circle your favorite idea','ضع دائرة حول فكرتك المفضلة'),
-   st(1,'Message 3 people who might pay for it','راسل 3 أشخاص قد يدفعون مقابلها','Message one person','راسل شخصاً واحداً'),
-   st(1,'Take the first paid action','نفّذ أول خطوة مدفوعة','Write the price you would charge','اكتب السعر الذي ستطلبه'),
-   st(2,"Review what worked and what didn't",'راجع ما نجح وما لم ينجح','Write one lesson','اكتب درساً واحداً'),
-   st(2,'Repeat the thing that worked, twice','كرّر ما نجح مرتين','Plan the repeat only','خطّط للتكرار فقط'),
-   st(2,'Set a weekly money check-in','حدّد موعداً أسبوعياً لمراجعة المال','Pick the day for it','اختر اليوم فقط')]},
- car:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write your real monthly budget','اكتب ميزانيتك الشهرية الحقيقية'),st(0,'Shortlist 3 models','اختر 3 موديلات مرشحة'),st(0,'Check insurance and running costs for each','اطّلع على التأمين وتكاليف التشغيل لكل منها'),st(0,'Book one test drive','احجز تجربة قيادة واحدة'),st(0,'Decide the price ceiling and the date','حدّد السعر الأقصى والموعد')]},
- laptop:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'List what you need it to do','اكتب ما تحتاجه منه'),st(0,'Compare 2 options on price and specs','قارن بين خيارين من حيث السعر والمواصفات'),st(0,'Decide a price ceiling','حدّد سقف السعر'),st(0,'Check for sales or trade-in options','ابحث عن عروض أو خيارات استبدال'),st(0,'Buy it','اشترِه')]},
- marry:{cl:'life',note:{en:'A theme with milestones, not a checklist.',ar:'محور بمراحل، وليس قائمة مهام.'},steps:[st(0,'Write 3 values that matter most to you','اكتب 3 قيم هي الأهم بالنسبة لك'),st(0,'Talk with your partner about it, no agenda','تحدّث مع شريك حياتك عن الموضوع دون أجندة'),st(0,'Define what "ready" looks like','عرّف ما معنى أن تكون جاهزاً'),st(0,"List the milestones and who's involved",'اكتب المحطات الرئيسية ومن يشارك فيها'),st(0,'Set a rough budget and timeline','ضع ميزانية وجدولاً زمنياً تقريبياً')]},
- learn:{cl:'growth',steps:[st(0,'Pick the one thing','اختر الشيء الواحد'),st(0,'Find one good beginner resource','ابحث عن مصدر واحد جيد للمبتدئين'),st(0,'Spend 10 minutes on it','اقضِ 10 دقائق فيه'),st(0,'Book a weekly slot','احجز موعداً أسبوعياً'),st(0,'Show or teach someone what you learned','اشرح لشخص ما ما تعلمته')]},
- house:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write what home means: area, size, budget','اكتب ما يعنيه البيت لك: المنطقة والمساحة والميزانية'),st(0,'Check mortgage or rent affordability','تحقق من قدرتك على التمويل أو الإيجار'),st(0,'Shortlist 3 areas','اختر 3 مناطق مرشحة'),st(0,'Visit 2 places','زر مكانين'),st(0,'Decide and set the next-step date','قرّر وحدّد موعد الخطوة التالية')]},
- travel:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Pick the destination and rough dates','اختر الوجهة والتواريخ التقريبية'),st(0,'Set a budget','حدّد الميزانية'),st(0,'Check visas and flights','تحقق من التأشيرات والرحلات'),st(0,'Book the first thing','احجز أول شيء')]},
- gen_money:{cl:'money',steps:[st(0,'Write the exact amount you want','اكتب المبلغ الذي تريده بالضبط'),st(0,'List 3 ways to get there','اكتب 3 طرق للوصول إليه'),st(0,'Take the smallest first action','نفّذ أصغر خطوة أولى')]},
- gen_body:{cl:'body',steps:[st(0,'Write down where you are today','دوّن أين أنت اليوم'),st(0,'Pick one daily habit for it','اختر عادة يومية واحدة له'),st(0,'Do it once today','نفّذها مرة اليوم')]},
- gen_life:{cl:'life',steps:[st(0,'Write why this matters to you','اكتب لماذا يهمك هذا'),st(0,'Name the first conversation to have','حدّد أول حديث يجب أن تجريه'),st(0,'Set a rough timeframe','ضع إطاراً زمنياً تقريبياً')]},
- gen_growth:{cl:'growth',steps:[st(0,'Pick the one thing to start with','اختر الشيء الأول للبدء'),st(0,'Spend 10 minutes on it','اقضِ 10 دقائق فيه'),st(0,'Book a weekly slot','احجز موعداً أسبوعياً')]},
- gen_create:{cl:'create',steps:[st(0,'Write down the idea in one sentence','اكتب الفكرة في جملة واحدة'),st(0,'Make the ugliest possible first version','اصنع أقبح نسخة أولى ممكنة'),st(0,'Show it to one person','أرِها لشخص واحد')]}};
+  steps:[st(0,'Write down every income source you have today and how much each gives','اكتب كل مصادر دخلك الحالية وكم يعطيك كل مصدر','Write your main income only','اكتب دخلك الأساسي فقط'),
+   st(0,'Write the monthly income you want to reach, in AED','اكتب الدخل الشهري الذي تريد الوصول إليه بالدرهم','Write just one number','اكتب رقماً واحداً'),
+   st(0,'List 3 skills that people would pay you for','اكتب 3 مهارات يدفع الناس مقابلها','List one skill','اكتب مهارة واحدة'),
+   st(1,'Choose one idea to earn extra money and test it first','اختر فكرة واحدة لكسب دخل إضافي وجرّبها أولاً','Circle your favorite idea','ضع دائرة حول فكرتك المفضلة'),
+   st(1,'Message 3 people who might pay for it and ask if they are interested','راسل 3 أشخاص قد يدفعون مقابلها واسألهم إن كانوا مهتمين','Message one person','راسل شخصاً واحداً'),
+   st(1,'Get your first paying customer or make your first sale','احصل على أول عميل يدفع لك أو نفّذ أول عملية بيع','Decide the price you will ask','قرّر السعر الذي ستطلبه'),
+   st(2,'Look back: write what worked and what did not','انظر للخلف: اكتب ما نجح وما لم ينجح','Write one lesson','اكتب درساً واحداً'),
+   st(2,'Do the thing that worked again, twice','كرّر ما نجح مرتين','Plan the repeat only','خطّط للتكرار فقط'),
+   st(2,'Pick a weekly day to check your money for 10 minutes','اختر يوماً أسبوعياً لمراجعة أموالك لمدة 10 دقائق','Choose the day','اختر اليوم فقط')]},
+ car:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write your real monthly budget for a car (payment, fuel, insurance)','اكتب ميزانيتك الشهرية الحقيقية للسيارة (القسط والوقود والتأمين)'),st(0,'Pick 3 car models you could actually afford','اختر 3 موديلات تستطيع تحمّل تكلفتها فعلاً'),st(0,'For each model, check the insurance and yearly running cost','لكل موديل، اطّلع على التأمين وتكلفة التشغيل السنوية'),st(0,'Book a test drive for your top choice','احجز تجربة قيادة لخيارك الأول'),st(0,'Set your maximum price and the date you want to buy by','حدّد أعلى سعر ستدفعه وتاريخ الشراء المطلوب')]},
+ laptop:{cl:'money',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write down what you need the laptop for (work, editing, gaming...)','اكتب ما تحتاج اللابتوب من أجله (عمل، مونتاج، ألعاب...)'),st(0,'Compare 2 laptops on price and specs','قارن بين لابتوبين من حيث السعر والمواصفات'),st(0,'Set the maximum price you will pay','حدّد أعلى سعر ستدفعه'),st(0,'Look for sales, offers or trade-in options','ابحث عن تخفيضات أو عروض أو خيارات استبدال'),st(0,'Buy it','اشترِه')]},
+ marry:{cl:'life',note:{en:'A theme with milestones, not a checklist.',ar:'محور بمراحل، وليس قائمة مهام.'},steps:[st(0,'Write the 3 values that matter most to you in a marriage','اكتب القيم الثلاث الأهم بالنسبة لك في الزواج'),st(0,'Have a relaxed talk with your partner about the future, no agenda','تحدّث مع شريكة حياتك بهدوء عن المستقبل دون أجندة مسبقة'),st(0,'Write what "ready" means to you (money, home, timing)','اكتب ما معنى أن تكون «جاهزاً» (المال، البيت، التوقيت)'),st(0,'List the big milestones (family, venue, paperwork) and who is involved','اكتب المحطات الكبرى (العائلة، المكان، الأوراق) ومن يشارك فيها'),st(0,'Set a rough budget and a target date','ضع ميزانية تقريبية وتاريخاً مستهدفاً')]},
+ learn:{cl:'growth',steps:[st(0,'Choose the ONE thing you want to learn (a language, guitar, a skill)','اختر الشيء الواحد الذي تريد تعلّمه (لغة، جيتار، مهارة)'),st(0,'Find one beginner course or video series for it','ابحث عن دورة أو سلسلة فيديو واحدة للمبتدئين فيه'),st(0,'Spend 10 minutes on it today','اقضِ 10 دقائق فيه اليوم'),st(0,'Pick a fixed time each week to practice and add it to your calendar','اختر وقتاً ثابتاً كل أسبوع للتدرب وأضفه إلى تقويمك'),st(0,'Show or teach someone one thing you learned','اشرح لشخص ما شيئاً واحداً تعلمته')]},
+ house:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Write what your ideal home needs: area, size and budget','اكتب ما يحتاجه بيتك المثالي: المنطقة والمساحة والميزانية'),st(0,'Check what mortgage or rent you can afford each month','اعرف قيمة القسط أو الإيجار الشهري الذي تستطيع تحمّله'),st(0,'Choose 3 areas you would like to live in','اختر 3 مناطق تودّ السكن فيها'),st(0,'Visit 2 places in person or online','زر مكانين، حضورياً أو عبر الإنترنت'),st(0,'Decide on one and set the date for the next step','قرّر مكاناً واحداً وحدّد موعد الخطوة التالية')]},
+ travel:{cl:'life',sug:{label:{en:'Saved',ar:'المدخرات'},unit:{en:'AED',ar:'د.إ'}},steps:[st(0,'Choose where you want to go and roughly when','اختر وجهتك والوقت التقريبي للسفر'),st(0,'Set a total budget for the trip','حدّد ميزانية إجمالية للرحلة'),st(0,'Check visa rules and flight prices','اطّلع على شروط التأشيرة وأسعار الرحلات'),st(0,'Book the first thing (flight or hotel)','احجز أول شيء (الرحلة أو الفندق)')]},
+ gen_money:{cl:'money',steps:[st(0,'Write the exact amount of money you want, in AED','اكتب المبلغ الذي تريده بالضبط بالدرهم'),st(0,'Write 3 different ways you could get there','اكتب 3 طرق مختلفة قد توصلك إليه'),st(0,'Do the smallest first action today (a message, a search, a call)','نفّذ أصغر خطوة أولى اليوم (رسالة أو بحث أو اتصال)')]},
+ gen_body:{cl:'body',steps:[st(0,'Write down where you are today (weight, fitness or habit)','دوّن أين أنت اليوم (الوزن أو اللياقة أو العادة)'),st(0,'Choose one small daily habit that will move you forward','اختر عادة يومية صغيرة تدفعك للأمام'),st(0,'Do that habit once today','نفّذ هذه العادة مرة واحدة اليوم')]},
+ gen_life:{cl:'life',steps:[st(0,'Write why this matters to you in one sentence','اكتب لماذا يهمك هذا في جملة واحدة'),st(0,'Decide who you need to talk to first, and about what','حدّد مع من يجب أن تتحدث أولاً وعن ماذا'),st(0,'Set a rough time frame: when do you want this done?','ضع إطاراً زمنياً تقريبياً: متى تريد إنجاز هذا؟')]},
+ gen_growth:{cl:'growth',steps:[st(0,'Decide the first small thing to learn or do for this goal','قرّر أول شيء صغير تتعلمه أو تفعله لهذا الهدف'),st(0,'Spend 10 minutes on it today','اقضِ 10 دقائق فيه اليوم'),st(0,'Pick a fixed time each week to work on it','اختر وقتاً ثابتاً كل أسبوع للعمل عليه')]},
+ gen_create:{cl:'create',steps:[st(0,'Write your idea in one sentence','اكتب فكرتك في جملة واحدة'),st(0,'Make the quickest, roughest first version (ugly is fine)','اصنع أسرع نسخة أولى وأبسطها (لا بأس أن تكون قبيحة)'),st(0,'Show it to one person and ask what they think','أرِها لشخص واحد واسأله عن رأيه')]}};
 const DET=[['laptop',/laptop|macbook|computer|لابتوب|حاسوب|كمبيوتر/i],['car',/\bcar\b|vehicle|سيار/i],['house',/\bhouse\b|apartment|villa|property|\bhome\b|بيت|منزل|شقة|فيلا|عقار/i],['marry',/marry|married|wedding|propos|زواج|أتزوج|اتزوج|تزوج|عرس|خطوبة/i],['travel',/\btrip\b|travel|vacation|holiday|visit|سافر|سفر|رحلة|إجازة|اجازة/i],
  ['creator',/content|creator|youtube|tiktok|instagram|vlog|podcast|influenc|صانع محتوى|محتوى|يوتيوب|تيك|انستغرام|بودكاست/i],['weight',/weight|lose|\bfat\b|diet|slim|fitness|get fit|gym|وزن|انقص|رجيم|دهون|لياقة|جيم/i],['learn',/learn|course|study|language|skill|\bread\b|guitar|piano|تعلم|دورة|دراس|لغة|مهار|قراءة|جيتار|بيانو/i],['money',/money|earn|income|salary|raise|business|freelanc|invest|hustle|اكسب|دخل|مال|مشروع|راتب|استثمار|عمل حر/i]];
 const CLASSIFY=[[/buy|save|money|income|invest|salary|business|rent|debt|earn|مال|ادخار|دخل|شراء|اشتري|دين/i,'money'],[/run|eat|sleep|health|walk|رياض|صح|مشي|نوم/i,'body'],[/family|move|home|kids|friend|relationship|عائل|أطفال|صديق/i,'life'],[/learn|study|book|تعلم|دراس|كتاب/i,'growth'],[/film|post|music|write|brand|design|فيلم|موسيق|تصميم|كتابة|قناة/i,'create']];
@@ -470,8 +524,9 @@ function linkDeps(){
 }
 
 /* ---------- state ---------- */
-const fresh=()=>({v:3,app:VERSION,name:'',onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[]});
+const fresh=()=>({v:3,app:VERSION,name:'',avatar:'brain',onboarded:false,toured:false,base:0,calm0:6,answers:{},goals:[],days:[],badges:[],flags:{},msgs:[],todayDone:[]});
 let S=store.get(KEY);if(!S||!Array.isArray(S.goals))S=fresh();
+S.avatar=S.avatar||'brain';
 const save=()=>store.set(KEY,S);
 const G=id=>S.goals.find(g=>g.id===id);
 const L=()=>isAr()?2:1;
@@ -499,21 +554,45 @@ function events(){const ev=[];S.goals.forEach(g=>{g.steps.forEach(x=>{if(x.at)ev
 const lastTouch=g=>Math.max(g.since||0,...events().filter(e=>e.g===g.id).map(e=>e.at));
 const isShrunk=(g,i)=>g.active&&i>=0&&(Date.now()-lastTouch(g))/D>=((S.answers&&S.answers.pat===3)?2:3);
 
-/* ---------- theme / icons ---------- */
+/* ---------- theme / icons / avatars ---------- */
 const SUN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 const MOON='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg>';
-const USER='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c1-4 4-5.5 7-5.5s6 1.5 7 5.5"/></svg>';
 const MIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>';
+const AV={spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/>',leaf:'<path d="M6 18c0-8 5-12 12-12 0 8-4 12-12 12zM6 18l6-6"/>',moon:'<path d="M18 14.5A7 7 0 0 1 9.5 6 7 7 0 1 0 18 14.5z"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',wave:'<path d="M3 12c3-6 6 6 9 0s6 6 9 0"/>',mount:'<path d="M3 19l6-10 4 6 3-4 5 8z"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',bolt:'<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',heart:'<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>',compass:'<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',flame:'<path d="M12 3c1 4 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 0 2 1 3 2 3 0-3-1-5 1-9z"/>'};
+const AVKEYS=['brain',...Object.keys(AV)];
+const avHTML=k=>k==='brain'||!AV[k]?brainSVG(false):`<svg class="sym" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">${AV[k]}</svg>`;
+const refreshAvatarBtn=()=>{$('#profBtn').innerHTML=avHTML(S.avatar)};
 function setTheme(t){document.documentElement.dataset.theme=t;$('#theme').innerHTML=t==='dark'?SUN:MOON;store.set('projectBrain.theme',t)}
 setTheme(store.get('projectBrain.theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
 $('#theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
-$('#profBtn').innerHTML=USER;$('#mic').innerHTML=MIC;
+refreshAvatarBtn();$('#mic').innerHTML=MIC;
 
-/* ---------- views ---------- */
-$('#brainHome').innerHTML=brainSVG(false);
-$('#ghost').innerHTML=`<g transform="translate(-190,-152) scale(1.9)">${brainSVG(true).replace(/^<svg[^>]*>/,'').replace('</svg>','')}</g>`;
+/* ---------- views + 3D home brain ---------- */
 const view=v=>{document.body.dataset.view=v;closeSheets()};
-$('#brainBtn').onclick=()=>view('map');
+const B3={rx:0,ry:0,tx:0,ty:0,drag:false,moved:false,sx:0,sy:0,el:null,shine:null};
+function mkBrain3d(){
+  const mix=(a,b,t)=>a.map((v,i)=>Math.round(lerp(v,b[i],t)));
+  const c0=[232,134,160],c1=[168,66,98];let h='<div id="brain3d">';
+  for(let i=8;i>=1;i--){const c=mix(c0,c1,i/8);h+=`<div class="layer" style="transform:translateZ(${-i*4}px)"><svg viewBox="0 0 200 160"><path d="${BODY()}" fill="rgb(${c})"/><path d="${CER()}" fill="rgb(${c})"/></svg></div>`}
+  h+=`<div class="front">${brainSVG(false,true)}</div></div>`;
+  $('#brainHome').innerHTML=h;B3.el=$('#brain3d');B3.shine=document.getElementById('b'+bid+'s');
+}
+function tick3d(ts){
+  if(document.body.dataset.view==='map'||!B3.el)return;
+  if(!B3.drag){B3.tx=Math.sin(ts/2300)*7;B3.ty=Math.cos(ts/2700)*5}
+  B3.rx+=(B3.tx-B3.rx)*.12;B3.ry+=(B3.ty-B3.ry)*.12;
+  B3.el.style.transform=`rotateX(${B3.rx.toFixed(2)}deg) rotateY(${B3.ry.toFixed(2)}deg)`;
+  if(B3.shine){B3.shine.setAttribute('cx',(.35-B3.ry/70).toFixed(3));B3.shine.setAttribute('cy',(.28+B3.rx/70).toFixed(3))}
+}
+mkBrain3d();
+(function(){
+  const bb=$('#brainBtn');
+  bb.addEventListener('pointerdown',e=>{B3.drag=true;B3.sx=e.clientX;B3.sy=e.clientY;B3.moved=false;try{bb.setPointerCapture(e.pointerId)}catch(_){}});
+  bb.addEventListener('pointermove',e=>{if(!B3.drag)return;const dx=e.clientX-B3.sx,dy=e.clientY-B3.sy;if(Math.hypot(dx,dy)>8)B3.moved=true;B3.ty=clamp(dx*.45,-32,32);B3.tx=clamp(-dy*.4,-24,24)});
+  const end=()=>{B3.drag=false};bb.addEventListener('pointerup',end);bb.addEventListener('pointercancel',end);
+  bb.addEventListener('click',()=>{if(B3.moved){B3.moved=false;return}view('map')});
+})();
+$('#ghost').innerHTML=`<g transform="translate(-190,-152) scale(1.9)">${brainSVG(true).replace(/^<svg[^>]*>/,'').replace('</svg>','')}</g>`;
 $('#back').onclick=()=>{endReplay();view('home')};
 
 /* ---------- map ---------- */
@@ -521,7 +600,11 @@ const NS='http://www.w3.org/2000/svg';
 const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);p&&p.appendChild(e);return e};
 let nodes=[],edgeEls={spokes:[],deps:[]},tangles=[];
 const RX=150,RY=112,CORD=['money','create','growth','body','life'];
+const FOCUS={id:null,n:null,k:0,tk:0,tx:0,ty:0,S:2.3,hold:false};
+const DR={n:null,id:null,sx:0,sy:0,px:0,py:0,moved:false};
+const mapPt=e=>new DOMPoint(e.clientX,e.clientY).matrixTransform($('#mapSvg').getScreenCTM().inverse());
 function build(){
+  FOCUS.id=null;FOCUS.n=null;FOCUS.k=FOCUS.tk=0;$('#zoomG').removeAttribute('transform');$('#veil').classList.remove('on');
   $('#nodes').innerHTML='';$('#edges').innerHTML='';$('#ring').innerHTML='';
   const sorted=[...S.goals].sort((a,b)=>CORD.indexOf(a.cluster)-CORD.indexOf(b.cluster));
   const main=sorted.slice(0,8),extra=sorted.slice(8);
@@ -531,7 +614,8 @@ function build(){
     const a=-Math.PI/2+idx*2*Math.PI/n+(r>1?.3:0);
     const o={g,lx:Math.cos(a)*RX*r,ly:Math.sin(a)*RY*r,
       bx:Math.cos(gi*2.399+rnd(g.id,'x')*.9)*(60+rnd(g.id,'y')*85)*1.2,by:Math.sin(gi*2.399+rnd(g.id,'x')*.9)*(60+rnd(g.id,'y')*85)*.95,
-      sx:.00028+rnd(g.id,'sx')*.0004,sy:.00026+rnd(g.id,'sy')*.0004,px:rnd(g.id,'px')*6.28,py:rnd(g.id,'py')*6.28};
+      sx:.00028+rnd(g.id,'sx')*.0004,sy:.00026+rnd(g.id,'sy')*.0004,px:rnd(g.id,'px')*6.28,py:rnd(g.id,'py')*6.28,
+      drag:false,free:false,ox:0,oy:0,ovx:0,ovy:0,vx:0,vy:0,tx:0,ty:0};
     o.hw=Math.min(gt(g).length,26)*2.9+14;o.x=o.bx;o.y=o.by;return o});
   edgeEls={spokes:[],deps:[]};
   nodes.forEach(()=>edgeEls.spokes.push(el('path',{class:'edge'},$('#edges'))));
@@ -546,9 +630,34 @@ function build(){
     n.dot=el('circle',{class:'dot',r:6,stroke:'currentColor','stroke-width':1.3},g);
     n.txt=el('text',{y:27,'text-anchor':'middle'},g);
     el('circle',{r:26,fill:'transparent'},g);
-    g.addEventListener('click',()=>openGoal(n.g.id));
+    g.addEventListener('pointerdown',e=>{
+      if(RPL.on||(typeof TOUR!=='undefined'&&TOUR.on)||FOCUS.id)return;e.preventDefault();
+      const p=mapPt(e);DR.n=n;DR.id=e.pointerId;DR.sx=e.clientX;DR.sy=e.clientY;DR.px=p.x;DR.py=p.y;DR.moved=false;
+    });
   });
   paint();
+}
+window.addEventListener('pointermove',e=>{
+  const n=DR.n;if(!n||e.pointerId!==DR.id)return;
+  if(!DR.moved&&Math.hypot(e.clientX-DR.sx,e.clientY-DR.sy)>7){DR.moved=true;n.drag=true;n.free=false;n.el.classList.add('held')}
+  if(!DR.moved)return;const p=mapPt(e);DR.px=p.x;DR.py=p.y;
+});
+function endDrag(e){
+  const n=DR.n;if(!n||(e&&e.pointerId!==DR.id))return;DR.n=null;n.el.classList.remove('held');
+  if(DR.moved){n.drag=false;n.free=true;n.ox=n.x-n.tx;n.oy=n.y-n.ty;n.ovx=n.vx*.6;n.ovy=n.vy*.6}
+  else focusGoal(n.g.id);
+}
+window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
+
+function focusGoal(id){
+  const n=nodes.find(m=>m.g.id===id);if(!n)return;
+  const svg=$('#mapSvg'),r=svg.getBoundingClientRect(),p=new DOMPoint(r.left+r.width/2,r.top+r.height*.22).matrixTransform(svg.getScreenCTM().inverse());
+  FOCUS.id=id;FOCUS.n=n;FOCUS.tx=p.x;FOCUS.ty=p.y;FOCUS.tk=1;
+  nodes.forEach(m=>m.el.classList.toggle('sel',m===n));$('#veil').classList.add('on');
+  openGoal(id);
+}
+function unfocus(){
+  if(!FOCUS.id)return;FOCUS.id=null;FOCUS.tk=0;nodes.forEach(m=>m.el.classList.remove('sel'));$('#veil').classList.remove('on');
 }
 function paint(){
   nodes.forEach(n=>{
@@ -563,18 +672,31 @@ function paint(){
   $('#insight').textContent=insight();
 }
 function frame(ts){
+  tick3d(ts);
   if(RPL.on){const t=clamp((ts-RPL.t0)/RPL.dur,0,1);RPL.rf=ease(t);
     $('#rpFill').style.width=(t*100)+'%';$('#rpDay').textContent=T('day',Math.max(1,Math.round(1+t*(RPL.days-1))));
     const c=Math.round(RPL.c0+(RPL.c1-RPL.c0)*RPL.rf);$('#calmN').textContent=c+'%';$('#calmBar').style.width=c+'%'}
+  FOCUS.k+=(FOCUS.tk-FOCUS.k)*.09;if(Math.abs(FOCUS.tk-FOCUS.k)<.002)FOCUS.k=FOCUS.tk;
   const go=globalOrder()*(RPL.on?RPL.rf:1);
   nodes.forEach(n=>{
     const o=nodeOrder(n.g),e=ease(clamp((o-.1)/.6,0,1)),amp=30*Math.pow(1-e,1.5)+1;
     const wx=Math.sin(ts*n.sx+n.px)*amp+Math.sin(ts*n.sx*2.3+n.py)*amp*.4;
     const wy=Math.cos(ts*n.sy+n.py)*amp+Math.cos(ts*n.sy*1.9+n.px)*amp*.4;
     const mx=190-n.hw,tx=clamp(lerp(n.bx,n.lx,e)+wx,-mx,mx),ty=lerp(n.by,n.ly,e)+wy;
-    n.x+=(tx-n.x)*.06;n.y+=(ty-n.y)*.06;
+    n.tx=tx;n.ty=ty;
+    if(n.drag){const cx=clamp(DR.px,-mx,mx),cy=clamp(DR.py,-285,285),x0=n.x,y0=n.y;n.x+=(cx-n.x)*.4;n.y+=(cy-n.y)*.4;n.vx=n.x-x0;n.vy=n.y-y0}
+    else if(n.free){n.ovx+=-n.ox*.004;n.ovy+=-n.oy*.004;n.ovx*=.955;n.ovy*=.955;n.ox+=n.ovx;n.oy+=n.ovy;n.x=tx+n.ox;n.y=ty+n.oy;
+      if(Math.abs(n.ox)+Math.abs(n.oy)+Math.abs(n.ovx)+Math.abs(n.ovy)<.6)n.free=false}
+    else{n.x+=(tx-n.x)*.06;n.y+=(ty-n.y)*.06}
     n.el.setAttribute('transform',`translate(${n.x.toFixed(2)},${n.y.toFixed(2)})`);
   });
+  const zg=$('#zoomG');
+  if(FOCUS.n&&(FOCUS.k>.002||FOCUS.tk)){
+    const e=ease(FOCUS.k),s=1+(FOCUS.S-1)*e,n=FOCUS.n;
+    zg.setAttribute('transform',`translate(${(e*(FOCUS.tx-FOCUS.S*n.x)).toFixed(2)},${(e*(FOCUS.ty-FOCUS.S*n.y)).toFixed(2)}) scale(${s.toFixed(4)})`);
+    if(FOCUS.id){const r=n.dot.getBoundingClientRect(),a=$('#app').getBoundingClientRect(),v=$('#veil');
+      v.style.setProperty('--fx',(r.left+r.width/2-a.left)+'px');v.style.setProperty('--fy',(r.top+r.height/2-a.top)+'px')}
+  }else if(FOCUS.n){zg.removeAttribute('transform');FOCUS.n=null}
   const q=(a,b,c)=>{const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1;return `M${a.x.toFixed(1)},${a.y.toFixed(1)}Q${(mx-dy/l*c).toFixed(1)},${(my+dx/l*c).toFixed(1)} ${b.x.toFixed(1)},${b.y.toFixed(1)}`};
   const chaos=1-go;
   tangles.forEach(t=>{t.e.setAttribute('d',q(t.a,t.b,70*Math.sin(ts*.0004+t.k)*chaos));t.e.style.opacity=.4*Math.pow(chaos,1.3);t.e.style.strokeWidth=.8});
@@ -585,7 +707,7 @@ function frame(ts){
   requestAnimationFrame(frame);
 }
 
-/* ---------- local "AI" (rule-based in v1.0.0; real AI later) ---------- */
+/* ---------- local "AI" (rule-based; real AI later) ---------- */
 function insight(){
   if(!S.goals.length)return T('insEmpty');
   const open=S.goals.filter(g=>!fin(g));
@@ -604,13 +726,32 @@ function patterns(){
   return out;
 }
 
-/* ---------- sheets ---------- */
-function closeSheets(){document.querySelectorAll('.sheet').forEach(x=>x.classList.remove('open'));$('#scrim').classList.remove('on')}
-function openSheet(id){closeSheets();requestAnimationFrame(()=>{$(id).classList.add('open');$('#scrim').classList.add('on')})}
+/* ---------- sheets (close button, scrim tap, swipe down) ---------- */
+function closeSheets(){
+  document.querySelectorAll('.sheet').forEach(x=>{x.classList.remove('open');x.style.transform='';x.style.transition=''});
+  $('#scrim').classList.remove('on','lite');if(!FOCUS.hold)unfocus();
+}
+function openSheet(id){
+  FOCUS.hold=(id==='#goalSheet'&&!!FOCUS.id);closeSheets();FOCUS.hold=false;
+  const sh=$(id);
+  if(!sh.querySelector('.xbtn')){sh.insertAdjacentHTML('afterbegin',`<button class="xbtn" aria-label="${T('closeLbl')}">✕</button>`);sh.querySelector('.xbtn').onclick=closeSheets}
+  requestAnimationFrame(()=>{sh.classList.add('open');$('#scrim').classList.add('on');$('#scrim').classList.toggle('lite',id==='#goalSheet')});
+}
 $('#scrim').onclick=closeSheets;
+(function(){
+  let sh=null,y0=0,dy=0,t0=0,on=false,arm=false;
+  document.addEventListener('touchstart',e=>{const s=e.target.closest&&e.target.closest('.sheet');if(!s||!s.classList.contains('open')){sh=null;return}
+    const top=e.touches[0].clientY-s.getBoundingClientRect().top;sh=s;y0=e.touches[0].clientY;dy=0;on=false;arm=s.scrollTop<=0||top<70;t0=Date.now()},{passive:true});
+  document.addEventListener('touchmove',e=>{if(!sh||!arm)return;dy=e.touches[0].clientY-y0;
+    if(!on){if(dy>8&&sh.scrollTop<=0)on=true;else return}
+    sh.style.transition='none';sh.style.transform=`translateY(${Math.max(0,dy)}px)`;e.preventDefault()},{passive:false});
+  document.addEventListener('touchend',()=>{if(!sh)return;const s=sh;sh=null;if(!on)return;on=false;
+    s.style.transition='';const v=dy/Math.max(1,Date.now()-t0);if(dy>100||v>.6)closeSheets();else s.style.transform=''});
+})();
 function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2600)}
 function pulse(){const mg=$('#mapGroup');mg.classList.remove('pulse');void mg.getBoundingClientRect();mg.classList.add('pulse')}
 
+/* ---------- Today: moves from your priorities; asks to pick if none ---------- */
 function todayMoves(){
   const m=[];activeList().forEach(g=>{const i=nextStep(g);if(i>=0)m.push({g,i,done:false})});
   (S.todayDone||[]).filter(x=>x.d===new Date().toDateString()).forEach(x=>{const g=G(x.id);if(g)m.push({g,i:x.i,done:true})});
@@ -628,16 +769,36 @@ function touchGoal(gid){const g=G(gid);g.touches=g.touches||[];g.touches.push(Da
 function parkGoal(g){g.active=false;S.flags.parked=1;save();paint();toast(T('parkedToast'));checkBadges()}
 function logMetric(id,v){const g=G(id),m=g.metric,before=calm();m.cur=v;m.log.push({d:dayKey(),v,at:Date.now()});markDay();S.flags.measured=1;
   if(fin(g))g.active=false;save();paint();pulse();const d=calm()-before;toast(fin(g)?T('goalSettled',gt(g)):T('settled')+(d>0?' +'+d+'%':''));checkBadges()}
+let PICK=[];
+function openPicker(){
+  const open=S.goals.filter(g=>!fin(g)),sh=$('#todaySheet');
+  if(!open.length){
+    sh.innerHTML=`<div class="grab"></div><div class="tag">${T('today')}</div><h2>${T('pickEmptyT')}</h2><p class="note">${T('pickEmptyS')}</p><button class="btn" id="pkAdd">${T('addThought')}</button>`;
+    openSheet('#todaySheet');$('#pkAdd').onclick=()=>{view('map');setTimeout(()=>$('#addBtn').click(),500)};return;
+  }
+  PICK=activeList().map(g=>g.id);
+  sh.innerHTML=`<div class="grab"></div><div class="tag">${T('today')}</div><h2>${T('pickTitle')}</h2><p class="note">${T('pickSub')}</p>
+   ${open.map(g=>`<button class="opt ${PICK.includes(g.id)?'sel':''}" data-id="${g.id}">${esc(gt(g))}<small>${T('cl_'+g.cluster)}</small></button>`).join('')}
+   <button class="btn" id="pkSet" ${PICK.length?'':'disabled'} style="margin-top:6px">${T('pickSet')}</button>`;
+  sh.querySelectorAll('.opt').forEach(o=>o.onclick=()=>{const id=o.dataset.id,at=PICK.indexOf(id);
+    if(at>=0)PICK.splice(at,1);else{if(PICK.length>=3){toast(T('obMax'));return}PICK.push(id)}
+    o.classList.toggle('sel',at<0);$('#pkSet').disabled=!PICK.length});
+  $('#pkSet').onclick=()=>{S.goals.forEach(g=>{const on=PICK.includes(g.id);if(on&&!g.active)g.since=Date.now();g.active=on});save();paint();checkBadges();openToday()};
+  openSheet('#todaySheet');
+}
 function openToday(){
+  if(!activeList().length)return openPicker();
   const m=todayMoves(),left=m.filter(x=>!x.done).length;
   const dt=new Date().toLocaleDateString(loc(),{weekday:'long',day:'numeric',month:'long'});
   $('#todaySheet').innerHTML=`<div class="grab"></div><div class="tag">${dt}</div><h2>${left?T('yourMoves'):T('nothingLeft')}</h2>
    ${m.map((x,k)=>{const sm=!x.done&&isShrunk(x.g,x.i);return `<button class="tl ${x.done?'done':''}" data-k="${k}"><span class="chk"><svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><span><div class="g">${esc(gt(x.g))}${sm?' · '+T('madeSmaller'):''}</div><div class="s">${esc(sm?gmini(x.g,x.i):gs(x.g,x.i))}</div></span></button>`}).join('')}
-   <p class="note" style="margin-top:18px">${left?T('todayHelp'):T('calmAt',calm())}</p>`;
+   <p class="note" style="margin-top:18px">${left?T('todayHelp'):T('calmAt',calm())}</p>
+   <div style="text-align:center"><button class="lnk" id="tPick">${T('pickChange')}</button></div>`;
   $('#todaySheet').querySelectorAll('.tl').forEach(b=>b.onclick=()=>{const x=m[+b.dataset.k];if(!x.done){if(isShrunk(x.g,x.i))touchGoal(x.g.id);else completeStep(x.g.id,x.i);openToday()}});
+  $('#tPick').onclick=openPicker;
   openSheet('#todaySheet');
 }
-$('#todayBtn').onclick=openToday;
+$('#todayBtn').onclick=()=>openToday();
 
 function spark(m){
   const pts=[m.start,...m.log.map(l=>l.v)];if(pts.length<2)return '';
@@ -778,42 +939,57 @@ function checkBadges(silent){
   if(newly.length&&!silent){const b=BADGES.find(x=>x.id===newly[0]);setTimeout(()=>toast(T('badgeNew')+': '+bname(b)),1900)}
 }
 
-/* ---------- profile ---------- */
-function openProfile(){renderProfile();$('#profile').classList.add('open');closeSheets()}
+/* ---------- profile: Me / Settings / About ---------- */
+let profTab='me',resetArm=false;
+function openProfile(){profTab='me';renderProfile();$('#profile').classList.add('open');closeSheets()}
 function closeProfile(){$('#profile').classList.remove('open')}
 $('#profBtn').onclick=openProfile;
-function renderProfile(){
-  const earned=BADGES.filter(b=>S.badges.includes(b.id)).length,pt=patterns(),ini=(S.name||'').trim().charAt(0).toUpperCase();
-  $('#profile').innerHTML=`<div class="pbar"><button class="rb" id="pClose" aria-label="Close" style="font-size:18px">✕</button><span class="tag">${T('profile')}</span><span style="width:34px"></span></div>
-  <div class="pbody">
-   <div class="idc"><div class="avatar">${ini?esc(ini):brainSVG(false)}</div><input class="name" id="nameIn" placeholder="${T('namePh')}" value="${esc(S.name||'')}" maxlength="24"></div>
+const rowBtn=(id,k)=>`<button class="rw" id="${id}"><span>${T(k)}</span><span class="ar">›</span></button>`;
+function meHTML(){
+  const earned=BADGES.filter(b=>S.badges.includes(b.id)).length,pt=patterns();
+  return `<div class="idc"><div class="avatar">${avHTML(S.avatar)}</div><input class="name" id="nameIn" placeholder="${T('namePh')}" value="${esc(S.name||'')}" maxlength="24"></div>
+   <div class="sec"><h3>${T('avatarT')}</h3></div>
+   <div class="avgrid">${AVKEYS.map(k=>`<button class="avb ${S.avatar===k?'on':''}" data-a="${k}">${avHTML(k)}</button>`).join('')}</div>
    <div class="stats"><div><b>${calm()}%</b><span>${T('calm')}</span></div><div><b>${doneN()}</b><span>${T('moves')}</span></div><div><b>${S.days.length}</b><span>${T('activeDays')}</span></div></div>
    <div class="sec"><h3>${T('badges')}</h3><span>${earned} / ${BADGES.length}</span></div>
    <div class="badges">${BADGES.map(b=>`<button class="bd ${S.badges.includes(b.id)?'on':''}" data-b="${b.id}"><div class="ic"><svg viewBox="0 0 24 24">${SH[b.sh]}</svg></div><span>${bname(b)}</span></button>`).join('')}</div>
    <div class="sec"><h3>${T('patterns')}</h3></div>
    <div class="pat">${pt.length?pt.map(x=>`<div>${x}</div>`).join(''):`<div>${T('noPatterns')}</div>`}</div>
-   <button class="rw" id="rRev"><span>${T('weeklyReview')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rRep"><span>${T('mindReplay')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rTour"><span>${T('replayTour')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rShare"><span>${T('shareApp')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rBack"><span>${T('backup')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rRest"><span>${T('restore')}</span><span class="ar">›</span></button>
-   <div class="rw"><span>${T('language')}</span><div class="seg"><button data-l="en" class="${lang==='en'?'on':''}">English</button><button data-l="ar" class="${lang==='ar'?'on':''}">العربية</button></div></div>
-   <button class="rw" id="rMsg"><span>${T('msgDev')}</span><span class="ar">›</span></button>
-   <button class="rw" id="rAbout" style="border-bottom:0"><span>${T('about')}</span><span class="ar">›</span></button>
-  </div>`;
-  $('#pClose').onclick=closeProfile;
-  $('#nameIn').onchange=e=>{S.name=e.target.value.trim();save();renderProfile()};
+   ${rowBtn('rRev','weeklyReview')}${rowBtn('rRep','mindReplay')}${rowBtn('rBack','backup')}${rowBtn('rRest','restore')}`;
+}
+function setHTML(){
+  return `<div class="rw"><span>${T('language')}</span><div class="seg"><button data-l="en" class="${lang==='en'?'on':''}">English</button><button data-l="ar" class="${lang==='ar'?'on':''}">العربية</button></div></div>
+   ${rowBtn('rTour','replayTour')}${rowBtn('rShare','shareApp')}${rowBtn('rReset','resetBrain')}
+   <p class="note" style="margin-top:22px">${T('moreSoon')}</p>`;
+}
+function aboutHTML(){
+  return `<h2 style="font-size:24px;font-weight:300;margin:6px 0 4px">${T('brand')}</h2><p class="note">${T('aboutVer',VERSION)}</p>
+   <p class="note">${T('aboutPriv')}</p><p class="note">${T('aboutMed')}</p>
+   <p class="note">${T('aboutFb')}: <a class="mail" href="mailto:${DEV_EMAIL}">${DEV_EMAIL}</a></p>
+   ${rowBtn('rMsg','msgDev')}`;
+}
+function renderProfile(){
+  resetArm=false;
+  const tabs=['me','settings','about'];
+  $('#profile').innerHTML=`<div class="pbar"><button class="rb" id="pClose" aria-label="Close" style="font-size:18px">✕</button><span class="tag">${T('profile')}</span><span style="width:34px"></span></div>
+  <div class="pbody"><div class="seg tabs">${tabs.map(t=>`<button data-t="${t}" class="${profTab===t?'on':''}">${T('tab_'+t)}</button>`).join('')}</div>
+  ${profTab==='me'?meHTML():profTab==='settings'?setHTML():aboutHTML()}</div>`;
+  const on=(id,fn)=>{const e=$(id);if(e)e.onclick=fn};
+  on('#pClose',closeProfile);
+  document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{profTab=b.dataset.t;renderProfile();$('#profile').scrollTop=0});
+  const ni=$('#nameIn');if(ni)ni.onchange=e=>{S.name=e.target.value.trim();save()};
+  document.querySelectorAll('.avb').forEach(b=>b.onclick=()=>{S.avatar=b.dataset.a;save();refreshAvatarBtn();renderProfile()});
   document.querySelectorAll('.bd').forEach(b=>b.onclick=()=>{const x=BADGES.find(y=>y.id===b.dataset.b);toast(bname(x)+' · '+bdesc(x))});
-  $('#rRev').onclick=openReview;
-  $('#rRep').onclick=()=>{closeProfile();setTimeout(startReplay,500)};
-  $('#rTour').onclick=()=>{closeProfile();view('map');setTimeout(startTour,1400)};
-  $('#rShare').onclick=()=>shareText(T('shareText'),true);
-  $('#rBack').onclick=exportData;
-  $('#rRest').onclick=()=>$('#restoreIn').click();
-  $('#rMsg').onclick=openMsg;
-  $('#rAbout').onclick=openAbout;
-  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
+  on('#rRev',openReview);
+  on('#rRep',()=>{closeProfile();setTimeout(startReplay,500)});
+  on('#rBack',exportData);
+  on('#rRest',()=>$('#restoreIn').click());
+  on('#rTour',()=>{closeProfile();view('map');setTimeout(startTour,1400)});
+  on('#rShare',()=>shareText(T('shareText'),true));
+  on('#rReset',()=>{const b=$('#rReset');if(!resetArm){resetArm=true;b.querySelector('span').textContent=T('resetConfirm');return}
+    ['projectBrain.state','projectBrain.lang','projectBrain.langSet'].forEach(k=>store.del(k));S=fresh();location.reload()});
+  on('#rMsg',openMsg);
+  document.querySelectorAll('.seg button[data-l]').forEach(b=>b.onclick=()=>setLang(b.dataset.l));
 }
 async function shareText(text,app){
   const url=location.protocol.startsWith('http')?location.href:'';
@@ -831,43 +1007,40 @@ function exportData(){
 $('#restoreIn').onchange=e=>{
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const j=JSON.parse(r.result);if(!j||j.app!=='project-brain'||!j.state||!Array.isArray(j.state.goals))throw 0;
-    S=Object.assign(fresh(),j.state);save();build();renderProfile();toast(T('restored'))}catch(err){toast(T('badFile'))}};
+    S=Object.assign(fresh(),j.state);S.avatar=S.avatar||'brain';save();build();refreshAvatarBtn();renderProfile();toast(T('restored'))}catch(err){toast(T('badFile'))}};
   r.readAsText(f);e.target.value='';
 };
 function openMsg(){
   $('#msgSheet').innerHTML=`<div class="grab"></div><div class="tag">${T('msgDev')}</div><h2>${T('msgDev')}</h2><textarea id="msgTxt" placeholder="${T('msgPh')}"></textarea><button class="btn" id="msgSend">${T('send')}</button>`;
   $('#msgSend').onclick=()=>{const t=$('#msgTxt').value.trim();if(!t)return;S.msgs.push({t,at:Date.now()});save();closeSheets();
-    if(DEV_EMAIL)location.href=`mailto:${DEV_EMAIL}?subject=${encodeURIComponent('Project: Brain feedback')}&body=${encodeURIComponent(t)}`;
-    toast(DEV_EMAIL?T('send')+' ✓':T('msgSaved'))};
+    if(DEV_EMAIL){toast(T('msgSent'));location.href=`mailto:${DEV_EMAIL}?subject=${encodeURIComponent('Project: Brain feedback (v'+VERSION+')')}&body=${encodeURIComponent(t)}`}
+    else toast(T('msgSaved'))};
   openSheet('#msgSheet');
-}
-let resetArm=false;
-function openAbout(){
-  resetArm=false;
-  $('#aboutSheet').innerHTML=`<div class="grab"></div><div class="tag">${T('about')}</div><h2>${T('brand')}</h2>
-   <p class="note" style="margin-top:-6px">${T('aboutVer',VERSION)}</p>
-   <p class="note">${T('aboutPriv')}</p><p class="note">${T('aboutMed')}</p>
-   <button class="btn ghost" id="abReset">${T('resetBrain')}</button>`;
-  $('#abReset').onclick=()=>{if(!resetArm){resetArm=true;$('#abReset').textContent=T('resetConfirm');return}
-    store.del(KEY);S=fresh();location.reload()};
-  openSheet('#aboutSheet');
 }
 function setLang(l){lang=l;store.set('projectBrain.lang',l);applyLang();renderProfile()}
 function applyLang(){
   document.documentElement.lang=lang;document.documentElement.dir=isAr()?'rtl':'ltr';
   document.querySelectorAll('[data-i]').forEach(e=>e.textContent=T(e.dataset.i));
   document.querySelectorAll('[data-ph]').forEach(e=>e.placeholder=T(e.dataset.ph));
-  $('#spBtn').textContent=S.onboarded?T('next'):T('begin');$('#spLang').textContent=isAr()?'English':'العربية';$('#spVer').textContent='v'+VERSION;
+  $('#spIntro').innerHTML=T('introL').map(x=>`<p>${esc(x)}</p>`).join('');
+  $('#spBtn').textContent=S.onboarded?T('next'):T('begin');$('#spLang').textContent=isAr()?'English':'العربية';$('#spLang').style.display=S.onboarded?'':'none';$('#spVer').textContent='v'+VERSION;
   if($('#onboard').classList.contains('show'))renderOb(true);
   closeSheets();build();
 }
 
-/* ---------- splash: dots gather into the brain ---------- */
-const SP={done:false};
+/* ---------- splash: dots gather into the brain, then the intro ---------- */
+const SP={done:false,fast:null};
 function runSplash(){
-  const returning=S.onboarded,speed=returning?1.6:1,cv=$('#pc'),reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  const first=!S.onboarded,speed=first?1:1.6,cv=$('#pc'),reduce=matchMedia('(prefers-reduced-motion:reduce)').matches;
   $('#spBrain').innerHTML=brainSVG(false);
-  const show=()=>{SP.done=true;$('#spBrain').classList.add('on','float');cv.classList.add('off');$('#spTitle').classList.add('on');$('#spBtn').classList.add('on')};
+  const lines=()=>[...document.querySelectorAll('#spIntro p')];
+  const reveal=()=>{
+    if(first){const ps=lines();ps.forEach((p,i)=>setTimeout(()=>p.classList.add('on'),i*1700));setTimeout(()=>$('#spBtn').classList.add('on'),ps.length*1700+400);
+      SP.fast=()=>{ps.forEach(p=>p.classList.add('on'));$('#spBtn').classList.add('on')}}
+    else{$('#spTitle').classList.add('on');$('#spBtn').classList.add('on')}
+  };
+  const show=()=>{SP.done=true;$('#spBrain').classList.add('on','float');cv.classList.add('off');
+    if(first){lines().forEach(p=>p.classList.add('on'))}else $('#spTitle').classList.add('on');$('#spBtn').classList.add('on')};
   SP.skip=show;
   if(reduce){setTimeout(show,300);return}
   const dpr=Math.min(window.devicePixelRatio||1,2),cr=cv.getBoundingClientRect(),W=cr.width,H=cr.height;
@@ -890,16 +1063,25 @@ function runSplash(){
     }
     if(t>3.5&&!b1){b1=1;$('#spBrain').classList.add('on')}
     if(t>4.0&&!b2){b2=1;cv.classList.add('off')}
-    if(t>5.0&&!b3){b3=1;SP.done=true;$('#spTitle').classList.add('on');$('#spBtn').classList.add('on');$('#spBrain').classList.add('float')}
+    if(t>5.0&&!b3){b3=1;SP.done=true;reveal();$('#spBrain').classList.add('float')}
     if(t<9)requestAnimationFrame(step);else cx.clearRect(0,0,W,H);
   })(t0);
 }
-$('#splash').addEventListener('click',()=>{if(!SP.done&&SP.skip)SP.skip()});
+$('#splash').addEventListener('click',()=>{if(!SP.done&&SP.skip)SP.skip();else if(SP.fast)SP.fast()});
 $('#spLang').onclick=e=>{e.stopPropagation();setLang(isAr()?'en':'ar')};
 $('#spBtn').onclick=e=>{
   e.stopPropagation();$('#splash').classList.add('gone');setTimeout(()=>{$('#splash').style.display='none'},1200);
   if(!S.onboarded)startOnboarding();
 };
+
+/* ---------- language gate: first thing a new user sees ---------- */
+function showGate(){
+  $('#gateBrain').innerHTML=brainSVG(false);$('#gate').classList.add('show');
+  document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>{
+    lang=b.dataset.l;store.set('projectBrain.lang',lang);store.set('projectBrain.langSet',1);applyLang();
+    $('#gate').classList.add('gone');setTimeout(()=>{$('#gate').style.display='none'},950);runSplash();
+  });
+}
 
 /* ---------- first-run onboarding: sets how calm the map starts ---------- */
 const OB={step:0,name:'',feel:0,pat:0,text:'',list:[],picks:[]};
@@ -993,14 +1175,15 @@ function startTour(){TOUR.i=0;TOUR.on=true;$('#tour').classList.add('on');render
 function endTour(){TOUR.on=false;clearInterval(TOUR.iv);$('#tour').classList.remove('on');S.toured=true;save()}
 
 /* ---------- boot ---------- */
-applyLang();requestAnimationFrame(frame);runSplash();
+applyLang();requestAnimationFrame(frame);
+if(!S.onboarded&&!store.get('projectBrain.langSet'))showGate();else runSplash();
 if(/[?&]demo/.test(location.search))window.__demo={
   progress(f){const all=[];S.goals.forEach(g=>g.steps.forEach((x,i)=>all.push([g,x,i])));const n=Math.round(all.length*f),now=Date.now(),ev=k=>{const d=new Date(now-k*D);d.setHours(20,10);return d.getTime()};
     all.forEach(([g,x],k)=>{x.done=k<n;if(x.done)x.at=ev((k*5)%8);else delete x.at});
     S.goals.forEach(g=>{if(g.metric){const m=g.metric,sp=m.target-m.start;m.cur=m.start+sp*f*.8;m.log=[.2,.45,.8].map((y,j)=>({d:'',v:m.start+sp*f*y,at:ev(6-j*2)}))}});
     S.days=[0,1,2,3,4,5,6].map(k=>new Date(now-k*D).toLocaleDateString('en-CA'));S.flags=Object.assign(S.flags,{dumped:1,parked:1,measured:1});save();checkBadges(true);paint()},
   age(id,days){const g=G(id);g.since=Date.now()-days*D;g.touches=[];g.steps.forEach(x=>{if(x.at)x.at=Math.min(x.at,Date.now()-days*D)});g.metric&&g.metric.log.forEach(l=>l.at=Date.now()-days*D);save()},
-  open:openGoal,today:openToday,view,theme:setTheme,profile:openProfile,review:openReview,replay:startReplay,endReplay,lang:setLang,tour:startTour,calm,state:()=>S};
+  open:openGoal,focus:focusGoal,today:openToday,view,theme:setTheme,profile:openProfile,review:openReview,replay:startReplay,endReplay,lang:setLang,tour:startTour,calm,state:()=>S};
 </script>
 </body>
 </html>
